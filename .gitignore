@@ -1,0 +1,6 @@
+a.out
+philo
+*.a
+*.o
+*.d
+*.build
