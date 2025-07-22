@@ -24,17 +24,12 @@
 # include <sys/time.h>
 # include <time.h>
 
-typedef struct s_fork
-{
-	pthread_mutex_t	fork;
-	int				id;
-}	t_fork;
-
 typedef struct s_philo
 {
 	int				id;
+	pthread_t		tid;
 	bool			is_full;
-	int				has_eaten;
+	bool			has_eaten;
 	bool			status;
 	pthread_mutex_t	*lfork;
 	pthread_mutex_t	*rfork;
@@ -42,12 +37,20 @@ typedef struct s_philo
 
 typedef struct s_data
 {
-	struct s_phi	philo[200];
-	int				tab[5];
+	struct s_phi	*philo;
+	pthread_mutex_t	*fork;
+	int				nb_philos;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				nb_meals;
 }	t_data;
 
+bool	init_data(t_data *data, int argc, char **argv);
+bool	run_philo(t_data *data);
+
 int		is_digit(int c);
-long	ft_strtol(const char *nptr, char **endptr);
+long	atol(const char *nptr);
 void	print_output(t_data *data);
 
 #endif

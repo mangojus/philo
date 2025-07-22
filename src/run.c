@@ -12,39 +12,33 @@
 
 #include "philo.h" 
 
-static bool	args_checker(int argc, char **argv)
+void	*loop(void *arg)
 {
-	int	i;
-	int	j;
+	t_phi	*philo;
 
-	if (argc < 5 || argc > 6)
-		return (false);
-	i = 1;
-	while (argv[i])
+	philo = (t_phi *)arg;
+	while (true)
 	{
-		j = 0;
-		if (argv[i][0] == '-')
-			return (false);
-		while (argv[i][j])
-		{
-			if (!is_digit(argv[i][j++]))
-				return (false);
-		}
-		i++;
+		if (philo
 	}
-	if (atol(argv[1]) > 200) //remove depending on correction
-		return (false);
-	return (true);
 }
 
-int	main(int argc, char **argv)
+void	assign_forks(void)
 {
-	t_data	data;
+	
+}
 
-	if (!args_checker(argc, argv))
-		return (EXIT_FAILURE);
-	if (!init_data(&data, argc, argv))
-		return (EXIT_FAILURE);
-	run_thread(&data);
-	return (EXIT_SUCCESS);
+bool	run_thread(t_data *data, t_phi *philo)
+{
+	int	i;
+
+	i = 0;
+	while (i < data->nb_philos)
+	{
+		if (pthread_create(&(philo[i]->tid), NULL, &loop, philo[i]))
+			return (false)
+		philo[i]->status = true;
+		i++;
+	}
+	return (true);
 }
