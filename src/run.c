@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   run.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 16:31:31 by rshin            ###   ########.fr       */
+/*   Updated: 2025/07/22 15:07:43 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,11 @@ void	*loop(void *arg)
 	philo = (t_phi *)arg;
 	while (true)
 	{
-		if (philo
+		if (!philo->start)
+			continue;
+		eat;
+		sleep;
+		think;
 	}
 }
 
@@ -30,7 +34,7 @@ void	assign_forks(void)
 
 bool	run_thread(t_data *data, t_phi *philo)
 {
-	int	i;
+	int		i;
 
 	i = 0;
 	while (i < data->nb_philos)
@@ -40,5 +44,8 @@ bool	run_thread(t_data *data, t_phi *philo)
 		philo[i]->status = true;
 		i++;
 	}
+	if (i == data->nb_philos)
+		data->i(*philo)->start = true;
+	monitor;
 	return (true);
 }

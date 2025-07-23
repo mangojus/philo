@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 14:50:29 by rshin            ###   ########.fr       */
+/*   Updated: 2025/07/22 15:08:10 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 
 typedef struct s_philo
 {
+	bool			start;
 	int				id;
 	pthread_t		tid;
 	bool			is_full;
