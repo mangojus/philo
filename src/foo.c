@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/23 14:42:21 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/24 16:08:40 by rshin            ###   ########.fr       */
+/*   Updated: 2025/07/29 17:02:38 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,17 @@ typedef struct	s_fork
 	t_mtx	mutex;
 }	t_fork;
 
+typedef struct	s_time
+{
+	long	die;
+	long	eat;
+	long	sleep;
+	long	start;
+	long	end;
+	long	s;
+	long	last_s;
+}	t_time;
+
 typedef struct	s_philo
 {
 	pthread_t		tid;
@@ -42,36 +53,40 @@ typedef struct	s_param
 {
 	struct s_philo	*philo;
 	pthread_t		monitor;
-	int				time_to_die;
-	int				time_to_eat;
-	int				time_to_sleep;
-	bool			start;
+	struct s_time	time;
+	bool			begin;
 	bool			end;
 }	t_param;
 
+void	get_time(t_time *time)
+{
+	struct timeval	tv;
+	
+	gettimeofday(&tv, NULL);
+	time->s = tv.tv_usec - time->start;
+}
+
+void	ft_usleep(int time)
+{
+	usleep(time * 1000);
+}
+
 void	*routine(void *arg)
 {
-	int				ms;
-	int				last_time;
-	struct timeval	tv;
 	t_phi	*p;
-//	int		count;
 
-//	count = 0;
 	p =	(t_phi *)arg;
 	while (true)
 	{
-//		count++;
-		if (p->param->start == true)
+		if (p->param->begin == true)
 			break;
 		else
 			continue;
 	}
-//	printf("%d\n", count);
 	while (true)
 	{
-		gettimeofday(&tv, NULL);
-		last_time = tv.tv_usec;
+		get_time(&(p->param->time));
+		printf("%ld %d is thinking\n", p->param->time.s, p->id);
 		if (p->id % 2 == 0)
 		{
 			pthread_mutex_lock(&p->l_fork->mutex);
@@ -82,23 +97,22 @@ void	*routine(void *arg)
 			pthread_mutex_lock(&p->r_fork->mutex);
 			pthread_mutex_lock(&p->l_fork->mutex);
 		}
-		gettimeofday(&tv, NULL);
-		ms = tv.tv_usec - last_time;
-		printf("%d philo %d is thinking\n", ms, p->id);
-		usleep(param->time_to_eat);
-		gettimeofday(&tv, NULL);
-		last_time = tv.tv_usec;
-		ms = tv.tv_usec - last_time;
-		printf("%d philo %d is eating\n", ms, p->id);
+		get_time(&(p->param->time));
+		printf("%ld %d is eating\n", p->param->time.s, p->id);
+		ft_usleep(p->param->time.sleep);
+//		if (p->param->time.s - last_t >= p->param->time.die)
+//			p->is_dead = true;
 		pthread_mutex_unlock(&p->l_fork->mutex);
 		pthread_mutex_unlock(&p->r_fork->mutex);
-		gettimeofday(&tv, NULL);
-		last_time = tv.tv_usec;
-		ms = tv.tv_usec - last_time;
-		printf("%d philo %d is sleeping\n", ms, p->id);
-		usleep(param->time_to_sleep);
+		get_time(&(p->param->time));
+		printf("%ld %d is sleeping\n", p->param->time.s, p->id);
+		ft_usleep(p->param->time.sleep);
 		if (p->param->end == true)
+		{
+			get_time(&(p->param->time));
+			printf("%ld %d is dead\n", p->param->time.s, p->id);
 			break;
+		}
 	}
 	return (NULL);
 }
@@ -116,8 +130,9 @@ void	*monitor(void *arg)
 		{
 			if (param->philo[i].is_dead)
 			{
-				printf("philo %d is dead, end of simulation", i);
+				printf("%d is dead, end of simulation\n", i);
 				param->end = true;
+				return (NULL);
 			}
 			i++;
 		}
@@ -126,6 +141,7 @@ void	*monitor(void *arg)
 
 int	main(int argc, char **argv)
 {
+	struct timeval	tv;
 	t_param	param;
 	t_phi	p[3];
 	t_fork	fork[3];
@@ -135,9 +151,9 @@ int	main(int argc, char **argv)
 	(void)argv;
 	memset(&param, 0, sizeof(t_param));
 	param.philo = p;
-	param.time_to_die = 200;
-	param.time_to_eat = 200;
-	param.time_to_sleep = 200;
+	param.time.die = 200;
+	param.time.eat = 200;
+	param.time.sleep = 200;
 	i = 0;
 	while (i < 3)
 	{
@@ -167,7 +183,14 @@ int	main(int argc, char **argv)
 			return (1);
 		i++;
 	}
-	param.start = true;
+	gettimeofday(&tv, NULL);
+	param.time.start = tv.tv_usec;
+//	printf("%ld \n", tv.tv_usec);
+	param.begin = true;
+	while (true)
+	{
+		i++;
+	}
 	i = 0;
 	while (i < 3)
 	{

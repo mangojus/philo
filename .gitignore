@@ -1,5 +1,6 @@
 a.out
 philo
+*.swp
 *.a
 *.o
 *.d
