@@ -30,9 +30,6 @@ typedef struct	s_fork
 
 typedef struct	s_time
 {
-	long	die;
-	long	eat;
-	long	sleep;
 	long	start;
 	long	end;
 	long	s;
@@ -56,33 +53,36 @@ typedef struct	s_param
 	struct s_time	time;
 	bool			begin;
 	bool			end;
+	long			time_to_die;
+	long			time_to_eat;
+	long			time_to_sleep;
 }	t_param;
 
-void	get_time(t_time *time)
+long	get_time(void)
 {
-	struct timeval	tv;
+	struct timeval	time;
 	
-	gettimeofday(&tv, NULL);
-	time->s = tv.tv_usec - time->start;
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-void	ft_usleep(int time)
+void	ft_usleep(long duration)
 {
-	usleep(time * 1000);
+	long	end_time;
+
+	end_time = get_time() + duration;
+	while (end_time > get_time();
+		usleep(1000);
 }
 
 void	*routine(void *arg)
 {
 	t_phi	*p;
+	t_time	time;
 
 	p =	(t_phi *)arg;
-	while (true)
-	{
-		if (p->param->begin == true)
-			break;
-		else
-			continue;
-	}
+	while (!p->param->begin)
+		usleep(p->id * 1000);
 	while (true)
 	{
 		get_time(&(p->param->time));

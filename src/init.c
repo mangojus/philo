@@ -12,59 +12,38 @@
 
 #include "philo.h"
 
-bool	init_philo(t_data *data)
+bool	init_philo(t_param *param)
 {
 	int	i;
 
-	data->philo = malloc(data->nb_philos * sizeof(t_phi));
-	if (!data->philo)
+	param->philo = malloc(param->nb_philos * sizeof(t_phi));
+	if (!param->philo)
 		return (false);
-	memset(data->philo, 0, sizeof(t_phi));
+	memset(param->philo, 0, sizeof(t_phi));
 	i = 0;
-	while (i < data->nb_philos)
+	while (i < param->nb_philos)
 	{
-		data->philo[i]->id = i + 1;
-		data->philo[i]->status = true;
+		param->philo[i]->id = i + 1;
+		param->philo[i]->status = true;
+		param->philo[i]->param = param;
+		param->philo[i]->status = ALIVE;
+		pthread_mutex_init((&param->fork[i]->mutex), NULL);
+		param->philo[i]->l_fork = param->&fork[i]
+		if (i == param->nb_philos - 1)
+			param->philo[i]->r_fork = &fork[0];
+		else
+			param->philo[i]->r_fork = &fork[(i + 1) / 3 + (i + 1) % 3];
 		i++;
 	}
 	return (true);
 }
 
-static bool	init_mutex(t_data *data)
-{
-	int	i;
-
-	data->death = malloc(sizeof(pthread_mutex_t));
-	if (!data->death)
-		return (false);
-	data->fork = malloc(data->nb_philos * sizeof(pthread_mutex_t));
-	if (!data->fork)
-	{
-		free(data->death);
-		return (false);
-	}
-	if (pthread_mutex_init(data->death, NULL) == -1)
-	{
-		free(data->death);
-		free(data->fork);
-		return (false);
-	}
-	i = 0;
-	while (i < data->nb_philos)
-	{
-		if (pthread_mutex_init(&data->fork[i], NULL) == -1)
-			return (false);
-		i++;
-	}
-	return (true);
-}
-
-bool	init_data(t_data *data, int argc, char **argv)
+bool	init_param(t_param *param, int argc, char **argv)
 {
 	int		tab[5];
 	int		i;
 
-	memset(data, 0, sizeof(t_data));
+	memset(param, 0, sizeof(t_param));
 	i = 0;
 	while (i <= argc - 2)
 	{
@@ -73,19 +52,20 @@ bool	init_data(t_data *data, int argc, char **argv)
 			return (false);
 		i++;
 	}
-	data->nb_philos = tab[0];
-	data->time_to_die = tab[1];
-	data->time_to_eat = tab[2];
-	data->time_to_sleep = tab[3];
+	param->nb_philos = tab[0];
+	param->time_to_die = tab[1];
+	param->time_to_eat = tab[2];
+	param->time_to_sleep = tab[3];
 	if (argc == 6)
-		data->nb_meals = tab[4];
+		param->nb_meals = tab[4];
 	else
-		data->nb_meals = -1;
-	if (!init_philo(data))
+		param->nb_meals = -1;
+	param->fork = malloc(param->nb_philos * sizeof(t_fork));
+	if (!param->fork)
 		return (false);
-	if (!init_mutex(data))
+	if (!init_philo(param))
 	{
-		free(data->philo);
+		free(param->fork);
 		return (false);
 	}
 	return (true);

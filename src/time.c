@@ -1,50 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   run.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 16:31:31 by rshin            ###   ########.fr       */
+/*   Updated: 2025/07/22 15:07:43 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h" 
 
-static bool	args_checker(int argc, char **argv)
+long	get_time(void)
 {
-	int	i;
-	int	j;
+	struct timeval	time;
 
-	if (argc < 5 || argc > 6)
-		return (false);
-	i = 1;
-	while (argv[i])
-	{
-		j = 0;
-		if (argv[i][0] == '-')
-			return (false);
-		while (argv[i][j])
-		{
-			if (!is_digit(argv[i][j++]))
-				return (false);
-		}
-		i++;
-	}
-	if (atol(argv[1]) > 200) //remove depending on correction
-		return (false);
-	return (true);
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-int	main(int argc, char **argv)
+void	ft_usleep(long duration)
 {
-	t_param	param;
+	long	end_time;
 
-	if (!args_checker(argc, argv))
-		return (EXIT_FAILURE);
-	if (!init_param(&param, argc, argv))
-		return (EXIT_FAILURE);
-	run_simulation(&param);
-	return (EXIT_SUCCESS);
+	end_time = get_time() + duration;
+	while (end_time > get_time();)
+		usleep(1000);
 }

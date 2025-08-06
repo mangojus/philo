@@ -24,24 +24,32 @@
 # include <sys/time.h>
 # include <time.h>
 
+typedef pthread_mutex_t t_mtx;
+
+typedef enum e_stat
+{
+	EAT = 1,
+	SLEEP = 2,
+	THINK = 4,
+	FULL = 8,
+	DEAD = 16,
+}	t_stat;
+
 typedef struct s_philo
 {
 	int				id;
-	pthread_t		tid;
-	bool			is_full;
-	bool			is_dead;
-	bool			has_eaten;
-	bool			status;
-	pthread_mutex_t	*lfork;
-	pthread_mutex_t	*rfork;
+	t_mtx			tid;
+	t_stat			status;
+	t_mtx			*lfork;
+	t_mtx			*rfork;
 }	t_phi;
 
 typedef struct s_param
 {
 	struct s_phi	*philo;
-	pthread_mutex_t	*fork;
-	bool			start;
-	bool			begin;
+	t_mtx			*fork;
+	t_mtx			monitor;
+	long			start;
 	int				nb_philos;
 	int				time_to_die;
 	int				time_to_eat;
@@ -49,8 +57,11 @@ typedef struct s_param
 	int				nb_meals;
 }	t_param;
 
-bool	init_data(t_data *data, int argc, char **argv);
-bool	run_philo(t_data *data);
+bool	init_param(t_param *param, int argc, char **argv);
+bool	run_philo(t_phi *philo);
+
+long	get_time(void);
+void	ft_usleep(long duration);
 
 int		is_digit(int c);
 long	atol(const char *nptr);

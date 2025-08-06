@@ -12,18 +12,47 @@
 
 #include "philo.h" 
 
-void	*loop(void *arg)
+void	*monitor(void *arg)
 {
-	t_phi	*philo;
+	t_param	*param;
+	int		i;
 
-	philo = (t_phi *)arg;
+	param = (t_param *)arg;
 	while (true)
 	{
-		if (!philo->start)
-			continue;
-		eat;
-		sleep;
-		think;
+		i = 0;
+		while (i < param->nb_philos)
+		{
+			if (param->philo[i].status == DEAD)
+			{
+				printf("%d is dead, end of simulation\n", i);
+				param->end = true;
+				return (NULL);
+			}
+			i++;
+		}
+	}
+}
+
+void	*loop(void *arg)
+{
+	t_phi	*p;
+
+	p = (t_phi *)arg;
+	while (!p->param->start)
+		usleep(1000);
+	while (true)
+	{
+		if (p->id % 2 == 0)
+		{
+			pthread_mutex_lock(&p->l_fork->mutex);
+			pthread_mutex_lock(&p->r_fork->mutex);
+		}
+		else
+		{
+			pthread_mutex_lock(&p->r_fork->mutex);
+			pthread_mutex_lock(&p->l_fork->mutex);
+		}
 	}
 }
 
@@ -32,20 +61,19 @@ void	assign_forks(void)
 	
 }
 
-bool	run_thread(t_data *data, t_phi *philo)
+bool	run_simulation(t_param *param, t_phi *philo)
 {
 	int		i;
 
+	if (pthread_create(&param.monitor, NULL, &monitor, &param))
+		return (false);
 	i = 0;
-	while (i < data->nb_philos)
+	while (i < param->nb_philos)
 	{
-		if (pthread_create(&(philo[i]->tid), NULL, &loop, philo[i]))
+		if (pthread_create((&param->philo[i]), NULL, &loop, param->philo[i]))
 			return (false)
-		philo[i]->status = true;
 		i++;
 	}
-	if (i == data->nb_philos)
-		data->i(*philo)->start = true;
-	monitor;
+	param->start = get_time();
 	return (true);
 }
