@@ -19,12 +19,6 @@ int	is_digit(int c)
 	return (0);
 }
 
-void	print_output(t_phi p, char message)
-{
-	(void)data;
-	printf("%ld %d %s\n", p->message);
-}
-
 long	atol(const char *nptr)
 {
     size_t	i;

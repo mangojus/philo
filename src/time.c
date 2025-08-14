@@ -20,7 +20,7 @@ long	get_time(void)
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-void	ft_usleep(long duration)
+void	smart_sleep(long duration)
 {
 	long	end_time;
 

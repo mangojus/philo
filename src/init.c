@@ -12,61 +12,91 @@
 
 #include "philo.h"
 
-bool	init_philo(t_param *param)
+static bool	init_config(t_env *env, int argc, char **argv)
+{
+	int	param[5];
+	int	i;
+
+	i = 0;
+	while (i <= argc - 2)
+	{
+		param[i] = atol(argv[i + 1]);
+		if (param[i] > INT_MAX || param[i] < INT_MIN)
+			return (false);
+		i++;
+	}
+	env->cfg.nb_philos = param[0];
+	env->cfg.time_to_die = param[1];
+	env->cfg.time_to_eat = param[2];
+	env->cfg.time_to_sleep = param[3];
+	env->cfg.max_meals = param[4];
+	env->forks = malloc(env->cfg.nb_philos * sizeof(t_fork));
+	if (!env->forks)
+		return (false);
+	return (true);
+}
+
+static bool	init_philos(t_env *env)
 {
 	int	i;
 
-	param->philo = malloc(param->nb_philos * sizeof(t_phi));
-	if (!param->philo)
+	env->philos = malloc(env->cfg.nb_philos * sizeof(t_phi));
+	if (!env->philos)
 		return (false);
-	memset(param->philo, 0, sizeof(t_phi));
+	memset(env->philos, 0, sizeof(t_phi));
 	i = 0;
-	while (i < param->nb_philos)
+	while (i < env->cfg.nb_philos)
 	{
-		param->philo[i]->id = i + 1;
-		param->philo[i]->status = true;
-		param->philo[i]->param = param;
-		param->philo[i]->status = ALIVE;
-		pthread_mutex_init((&param->fork[i]->mutex), NULL);
-		param->philo[i]->l_fork = param->&fork[i]
-		if (i == param->nb_philos - 1)
-			param->philo[i]->r_fork = &fork[0];
+		env->philos[i].id = i + 1;
+		env->philos[i].cfg = &env->cfg;
+		env->philos[i].rts = &env->rts;
+		env->philos[i].lfork = &env->forks[i];
+		if (i == env->cfg.nb_philos - 1)
+			env->philos[i].rfork = &env->forks[0];
 		else
-			param->philo[i]->r_fork = &fork[(i + 1) / 3 + (i + 1) % 3];
+			env->philos[i].rfork = &env->forks[(i + 1) / 3 + (i + 1) % 3];
 		i++;
 	}
 	return (true);
 }
 
-bool	init_param(t_param *param, int argc, char **argv)
+static bool	init_mutexes(t_env *env)
 {
-	int		tab[5];
-	int		i;
+	int	i;
 
-	memset(param, 0, sizeof(t_param));
+	if (pthread_mutex_init(&env->rts.death_mtx, NULL))
+		return (false);
+	if (pthread_mutex_init(&env->rts.print_mtx, NULL))
+		return (false);
 	i = 0;
-	while (i <= argc - 2)
+	while (i < env->cfg.nb_philos)
 	{
-		tab[i] = atol(argv[i + 1]);
-		if (tab[i] > INT_MAX || tab[i] < INT_MIN)
+		if (pthread_mutex_init(&env->philos[i].meal.mtx, NULL))
+			return (false);
+		if (pthread_mutex_init(&env->forks[i].mtx, NULL))
 			return (false);
 		i++;
 	}
-	param->nb_philos = tab[0];
-	param->time_to_die = tab[1];
-	param->time_to_eat = tab[2];
-	param->time_to_sleep = tab[3];
-	if (argc == 6)
-		param->nb_meals = tab[4];
-	else
-		param->nb_meals = -1;
-	param->fork = malloc(param->nb_philos * sizeof(t_fork));
-	if (!param->fork)
-		return (false);
-	if (!init_philo(param))
-	{
-		free(param->fork);
-		return (false);
-	}
 	return (true);
+}
+
+t_err	init_env(t_env *env, int argc, char **argv)
+{
+	memset(env, 0, sizeof(t_env));
+	if (!init_config(env, argc, argv))
+		return (ERR_MALLOC);
+	pthread_mutex_init(&env->rts.death_mtx, NULL);
+	pthread_mutex_init(&env->rts.print_mtx, NULL);
+	if (!init_philos(env))
+	{
+		free(env->forks);
+		return (ERR_MALLOC);
+	}
+	if (!init_mutexes(env))
+	{
+		free(env->philos);
+		free(env->forks);
+		return (ERR_MUTEX);
+	}
+	return (ERR_OK);
 }

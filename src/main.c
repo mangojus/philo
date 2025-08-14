@@ -39,12 +39,15 @@ static bool	args_checker(int argc, char **argv)
 
 int	main(int argc, char **argv)
 {
-	t_param	param;
+	t_env	env;
 
 	if (!args_checker(argc, argv))
-		return (EXIT_FAILURE);
-	if (!init_param(&param, argc, argv))
-		return (EXIT_FAILURE);
-	run_simulation(&param);
-	return (EXIT_SUCCESS);
+	{
+		printf("Invalid arguments\n");
+		return (env.err_status);
+	}
+	if (init_env(&env, argc, argv) != ERR_OK)
+		return (env.err_status);
+	run_simulation(&env, env.philos);
+	return (env.err_status);
 }

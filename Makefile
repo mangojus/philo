@@ -19,6 +19,9 @@ CFLAGS = -Wall -Werror -Wextra -g
 IFLAGS = -I $(INC_D) -MMD -MP
 
 SRC = $(SRC_D)/main.c \
+	  $(SRC_D)/init.c \
+	  $(SRC_D)/run.c \
+	  $(SRC_D)/time.c \
 	  $(SRC_D)/utils.c 
 
 OBJ = $(patsubst $(SRC_D)/%.c, $(BLD_D)/%.o, $(SRC))

@@ -26,6 +26,16 @@
 
 typedef pthread_mutex_t t_mtx;
 
+typedef enum e_err
+{
+	ERR_OK = 0,
+	ERR_GLOBAL = 1,
+	ERR_INPUT = 2,
+	ERR_MALLOC = 3,
+	ERR_THREAD = 4,
+	ERR_MUTEX = 5,
+}	t_err;
+
 typedef enum e_stat
 {
 	EAT = 1,
@@ -35,36 +45,65 @@ typedef enum e_stat
 	DEAD = 16,
 }	t_stat;
 
-typedef struct s_philo
+typedef struct s_meal
 {
-	int				id;
-	t_mtx			tid;
-	t_stat			status;
-	t_mtx			*lfork;
-	t_mtx			*rfork;
+	long	last;
+	int		count;
+	t_mtx	mtx;
+}	t_meal;
+
+typedef struct s_fork
+{
+	bool	id;
+	t_mtx	mtx;
+}	t_fork;
+
+typedef struct s_philosopher
+{
+	int						id;
+	pthread_t				tid;
+	t_meal					meal;
+	t_fork					*lfork;
+	t_fork					*rfork;
+	struct s_config			*cfg;
+	struct s_runtime_state	*rts;
 }	t_phi;
 
-typedef struct s_param
+typedef struct s_config
 {
-	struct s_phi	*philo;
-	t_mtx			*fork;
-	t_mtx			monitor;
 	long			start;
 	int				nb_philos;
 	int				time_to_die;
 	int				time_to_eat;
 	int				time_to_sleep;
-	int				nb_meals;
-}	t_param;
+	int				max_meals;
+}	t_cfg;
 
-bool	init_param(t_param *param, int argc, char **argv);
-bool	run_philo(t_phi *philo);
+typedef struct s_runtime_state
+{
+	bool	death_flag;
+	t_mtx	death_mtx;
+	t_mtx	print_mtx;
+}	t_rts;
+
+typedef struct s_environment
+{
+	struct s_philosopher	*philos;
+	struct s_config			cfg;
+	struct s_runtime_state	rts;
+	pthread_t				monitor;
+	t_fork					*forks;
+	t_err					err_status;
+}	t_env;
+
+t_err	init_env(t_env *env, int argc, char **argv);
+bool	run_simulation(t_env *env, t_phi *philo);
+void	cleanup(t_env *env);
 
 long	get_time(void);
-void	ft_usleep(long duration);
+void	smart_sleep(long duration);
 
 int		is_digit(int c);
 long	atol(const char *nptr);
-void	print_output(t_data *data);
 
 #endif
