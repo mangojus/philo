@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/29 15:31:02 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/18 14:35:15 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ typedef struct s_meal
 
 typedef struct s_fork
 {
-	bool	id;
+	int		id;
 	t_mtx	mtx;
 }	t_fork;
 
@@ -93,7 +93,7 @@ typedef struct s_environment
 	struct s_runtime_state	rts;
 	pthread_t				monitor;
 	t_fork					*forks;
-	t_err					err_status;
+	t_err					status;
 }	t_env;
 
 t_err	init_env(t_env *env, int argc, char **argv);

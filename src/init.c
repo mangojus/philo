@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 16:32:04 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 16:32:11 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/18 14:37:47 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,12 @@ static bool	init_config(t_env *env, int argc, char **argv)
 	env->forks = malloc(env->cfg.nb_philos * sizeof(t_fork));
 	if (!env->forks)
 		return (false);
+	i = 0;
+	while (i < env->cfg.nb_philos)
+	{
+		env->forks[i].id = i;
+		i++;
+	}
 	return (true);
 }
 

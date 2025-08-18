@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 16:31:31 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/18 11:08:13 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,11 @@ int	main(int argc, char **argv)
 	if (!args_checker(argc, argv))
 	{
 		printf("Invalid arguments\n");
-		return (env.err_status);
+		return (ERR_INPUT);
 	}
-	if (init_env(&env, argc, argv) != ERR_OK)
-		return (env.err_status);
+	env.status = init_env(&env, argc, argv);
+	if (env.status != ERR_OK)
+		return (env.status);
 	run_simulation(&env, env.philos);
-	return (env.err_status);
+	return (env.status);
 }

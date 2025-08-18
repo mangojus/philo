@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/22 15:07:43 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/18 15:33:39 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,11 @@ static bool	event(t_phi *p, t_stat status, long	duration)
 		return (false);
 	}
 	pthread_mutex_unlock(&p->rts->death_mtx);
-	time = get_time();
+	time = get_time() - p->cfg->start;
+	pthread_mutex_lock(&p->rts->print_mtx);
+	print_event(p, status, time);
+	pthread_mutex_unlock(&p->rts->print_mtx);
+	smart_sleep(duration);
 	pthread_mutex_lock(&p->meal.mtx);
 	if (status == EAT)
 	{
@@ -44,10 +48,6 @@ static bool	event(t_phi *p, t_stat status, long	duration)
 		p->meal.count++;
 	}
 	pthread_mutex_unlock(&p->meal.mtx);
-	smart_sleep(duration);
-	pthread_mutex_lock(&p->rts->print_mtx);
-	print_event(p, status, time);
-	pthread_mutex_unlock(&p->rts->print_mtx);
 	return (true);
 } 
 
@@ -56,8 +56,9 @@ void	*philo_loop(void *arg)
 	t_phi	*p;
 
 	p = (t_phi *)arg;
-	while (!p->cfg->start)
-		usleep(1000);
+	while (p->cfg->start == -1)
+		continue;
+//		usleep(1000);
 	while (true)
 	{
 		if (!event(p, THINK, 0))
@@ -85,26 +86,35 @@ void	*philo_loop(void *arg)
 static void	*monitor_loop(void *arg)
 {
 	t_env	*env;
+	long	time;
 	long	elapsed_time;
 	int		i;
+	int		c;
 
 	env = (t_env *)arg;
+	while (env->cfg.start == -1)
+		continue;
+//		usleep(1000);
+	c = 0;
 	while (true)
 	{
 		i = 0;
 		while (i < env->cfg.nb_philos)
 		{
 			pthread_mutex_lock(&env->philos[i].meal.mtx);
-			elapsed_time = get_time() - env->philos[i].meal.last;
+			time = get_time() - env->cfg.start;
+			elapsed_time = time - env->philos[i].meal.last;
 			if (elapsed_time > env->cfg.time_to_die)
 			{
+				printf("%ld %d is dead\n", time, env->philos[i].id);
 				pthread_mutex_unlock(&env->philos[i].meal.mtx);
 				env->rts.death_flag = true;
-				break ;
+				return (NULL);
 			}
 			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			i++;
 		}
+		c++;
 	}
 	return (NULL);
 }
@@ -113,15 +123,24 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
+	env->cfg.start = -1;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 		return (false);
 	i = 0;
 	while (i < env->cfg.nb_philos)
 	{
-		if (pthread_create((&philos[i]), NULL, &philo_loop, &philos[i]))
-			return (false)
+		if (pthread_create((&philos[i].tid), NULL, &philo_loop, &philos[i]))
+			return (false);
 		i++;
 	}
-	env->cfg.start = get_time() + (env->cfg.nb_philos *  );
+	usleep(1000);
+	env->cfg.start = get_time();
+	i = 0;
+	while (i < env->cfg.nb_philos)
+	{
+		pthread_join(philos[i].tid, NULL);
+		pthread_mutex_destroy(&env->forks[i].mtx);
+		i++;
+	}
 	return (true);
 }
