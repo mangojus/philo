@@ -6,31 +6,14 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/18 15:33:39 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/19 19:10:21 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h" 
 
-void	print_event(t_phi *p, t_stat status, long time)
+bool	check_death(t_rts *rts)
 {
-	char	*msg;
-
-	if (status == THINK)
-		msg = "is thinking";
-	if (status == FORK)
-		msg = "has taken a fork";
-	if (status == EAT)
-		msg = "is eating";
-	if (status == SLEEP)
-		msg = "is sleeping";
-	printf("%ld %d %s\n", time, p->id, msg); 
-}
-
-static bool	event(t_phi *p, t_stat status, long	duration)
-{
-	long	time;
-
 	pthread_mutex_lock(&p->rts->death_mtx);
 	if (p->rts->death_flag == true)
 	{
@@ -38,20 +21,94 @@ static bool	event(t_phi *p, t_stat status, long	duration)
 		return (false);
 	}
 	pthread_mutex_unlock(&p->rts->death_mtx);
-	time = get_time() - p->cfg->start;
+	return (true);
+}
+
+void	print_output(long time, int id, char *msg)
+{
 	pthread_mutex_lock(&p->rts->print_mtx);
-	print_event(p, status, time);
+	printf("%ld %d %s\n", time, p->id, msg); 
 	pthread_mutex_unlock(&p->rts->print_mtx);
-	smart_sleep(duration);
-	if (status == EAT)
+}
+
+static bool	action(t_phi *p, char *msg)
+{
+	long	time;
+
+	if (!check_death(p->rts))
+		return (false);
+	time = get_time() - p->cfg->start;
+	print_output(time, p->id, msg);
+	return (true);
+}
+
+bool	take_fork(t_fork *fork)
+{
+	pthread_mutex_lock(&fork->mtx);
+	if (fork->is_taken == false)
 	{
-		pthread_mutex_lock(&p->meal.mtx);
-		p->meal.last = time;
-		p->meal.count++;
-		pthread_mutex_unlock(&p->meal.mtx);
+		fork->is_taken = true;
+		pthread_mutex_unlock(&fork->mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&fork->mtx);
+	return (false);
+}
+
+bool	drop_fork(t_fork *fork)
+{
+	
+}
+
+bool	take_forks(t_phi *p)
+{
+	int	first;
+	int	second;
+
+	while (true)
+	{
+		if (!check_death(p->rts))
+			return (false);
+		first = p->id % 2;
+		second = 1 - first;
+		pthread_mutex_lock(p->forks[first]->mtx);
+		if (p->forks[first]->is_taken == false)
+		{
+			p->forks[first]->is_taken = true;
+			pthread_mutex_unlock(p->forks[first]->mtx);
+			if (!action(p, "has taken a fork"))
+				return (false);
+			pthread_mutex_lock(p->forks[second]->mtx);
+			if (p->forks[second]->is_taken == false)
+			{
+				p->forks[second]->is_taken = true;
+				pthread_mutex_unlock(p->forks[second]->mtx);
+				if (!action(p, "has taken a fork"))
+					return (false);
+				break;
+			}
+			pthread_mutex_unlock(p->forks[second]->mtx);
+			p->forks[first]->is_taken = false;
+		}
+		pthread_mutex_unlock(p->forks[first]->mtx);
 	}
 	return (true);
-} 
+}
+
+bool	drop_forks(t_phi *p)
+{
+	int	first;
+	int	second;
+	
+	first = p->id % 2;
+	second = 1 - first;
+	pthread_mutex_lock(p->forks[first]->mtx);
+	p->forks[first]->is_taken = false;
+	pthread_mutex_unlock(p->forks[first]->mtx);
+	pthread_mutex_lock(p->forks[second]->mtx);
+	p->forks[second]->is_taken = false;
+	pthread_mutex_unlock(p->forks[second]->mtx);
+}
 
 void	*philo_loop(void *arg)
 {
@@ -63,30 +120,29 @@ void	*philo_loop(void *arg)
 //		usleep(1000);
 	while (true)
 	{
-		if (!event(p, THINK, 0))
+		if (!action(p, "is thinking", 0))
 			break;
-		if (p->id % 2 == 0)
-		{
-			pthread_mutex_lock(&p->lfork->mtx);
-			if (!event(p, FORK, 0))
-				break;
-			pthread_mutex_lock(&p->rfork->mtx);
-		}
-		else
-		{
-			pthread_mutex_lock(&p->rfork->mtx);
-			if (!event(p, FORK, 0))
-				break;
-			pthread_mutex_lock(&p->lfork->mtx);
-		}
-		if (!event(p, FORK, 0))
+		if (!take_forks(p))
 			break;
-		if (!event(p, EAT, p->cfg->time_to_eat))
+		if (!action(p, "is eating", p->cfg->time_to_eat))
+		{
+			drop_forks(p);
 			break ;
-		pthread_mutex_unlock(&p->lfork->mtx);
-		pthread_mutex_unlock(&p->rfork->mtx);
-		if (!event(p, SLEEP, p->cfg->time_to_sleep))
+		}
+		smart_sleep(p->cfg->time_to_eat);
+		pthread_mutex_lock(&p->meal.mtx);
+		p->meal.last = time;
+		p->meal.count++;
+		if (p->meal.count == p->cfg->max_meals)
+		{
+			pthread_mutex_unlock(&p->meal.mtx);
+			break;
+		}
+		pthread_mutex_unlock(&p->meal.mtx);
+		drop_forks(p);
+		if (!action(p, "is sleeping")
 			break ;
+		smart_sleep(p->cfg->time_to_sleep);
 	}
 	return (NULL);
 }
@@ -104,27 +160,33 @@ static void	*monitor_loop(void *arg)
 		continue;
 //		usleep(1000);
 	c = 0;
-	while (!env->rts.death_flag)
+	while (true)
 	{
 		i = 0;
 		while (i < env->cfg.nb_philos)
 		{
-			pthread_mutex_lock(&env->philos[i].meal.mtx);
 			time = get_time() - env->cfg.start;
+			pthread_mutex_lock(&env->philos[i].meal.mtx);
 			elapsed_time = time - env->philos[i].meal.last;
+			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			if (elapsed_time > env->cfg.time_to_die)
 			{
-				printf("%ld %d is dead\n", time, env->philos[i].id);
-				pthread_mutex_unlock(&env->philos[i].meal.mtx);
+				print_output(time, env->philos[i], "is dead");
+				pthread_mutex_lock(&env->rts->death_mtx);
 				env->rts.death_flag = true;
+				pthread_mutex_unlock(&env->rts->death_mtx);
 				break ;
 			}
-			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			i++;
 		}
 		c++;
 	}
 	return (NULL);
+}
+
+bool	init_threads(t_env *env)
+{
+	
 }
 
 bool	run_simulation(t_env *env, t_phi *philos)

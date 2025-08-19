@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:42:06 by rshin             #+#    #+#             */
-/*   Updated: 2025/07/21 11:20:57 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/19 15:24:12 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	is_digit(int c)
 	return (0);
 }
 
-long	atol(const char *nptr)
+long	atol(const char *nptr) //change into strict_atol for overflow
 {
     size_t	i;
     int		sign;

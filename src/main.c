@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/18 11:08:13 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/19 13:43:04 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,20 @@ static bool	args_checker(int argc, char **argv)
 	return (true);
 }
 
+void	cleanup(t_env *env)
+{
+	if (env->philos)
+	{
+		free(env->philos);
+		env->philos = NULL;
+	}
+	if (env->forks)
+	{
+		free(env->forks);
+		env->forks = NULL;
+	}
+}
+
 int	main(int argc, char **argv)
 {
 	t_env	env;
@@ -50,5 +64,6 @@ int	main(int argc, char **argv)
 	if (env.status != ERR_OK)
 		return (env.status);
 	run_simulation(&env, env.philos);
+	cleanup(&env);
 	return (env.status);
 }

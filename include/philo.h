@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/18 14:35:15 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/19 17:02:31 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,15 +36,16 @@ typedef enum e_err
 	ERR_MUTEX = 5,
 }	t_err;
 
-typedef enum e_stat
+typedef enum e_act
 {
 	THINK = 1,
-	FORK = 2,
+	TAKE_FORK = 2,
+	DROP_FORK,
 	EAT = 4,
 	SLEEP = 8,
 	FULL = 16,
 	DEAD = 32,
-}	t_stat;
+}	t_act;
 
 typedef struct s_meal
 {
@@ -55,7 +56,7 @@ typedef struct s_meal
 
 typedef struct s_fork
 {
-	int		id;
+	bool	is_taken;
 	t_mtx	mtx;
 }	t_fork;
 
@@ -64,8 +65,7 @@ typedef struct s_philosopher
 	int						id;
 	pthread_t				tid;
 	t_meal					meal;
-	t_fork					*lfork;
-	t_fork					*rfork;
+	t_fork					*forks[2];
 	struct s_config			*cfg;
 	struct s_runtime_state	*rts;
 }	t_phi;
@@ -87,11 +87,18 @@ typedef struct s_runtime_state
 	t_mtx	print_mtx;
 }	t_rts;
 
+typedef struct s_system
+{
+	int		nb_threads;
+	t_err	status;
+}	t_sys;
+
 typedef struct s_environment
 {
 	struct s_philosopher	*philos;
 	struct s_config			cfg;
 	struct s_runtime_state	rts;
+	struct s_systen			sys;
 	pthread_t				monitor;
 	t_fork					*forks;
 	t_err					status;
