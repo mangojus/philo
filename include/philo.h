@@ -38,11 +38,12 @@ typedef enum e_err
 
 typedef enum e_stat
 {
-	EAT = 1,
-	SLEEP = 2,
-	THINK = 4,
-	FULL = 8,
-	DEAD = 16,
+	THINK = 1,
+	FORK = 2,
+	EAT = 4,
+	SLEEP = 8,
+	FULL = 16,
+	DEAD = 32,
 }	t_stat;
 
 typedef struct s_meal

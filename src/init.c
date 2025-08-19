@@ -57,10 +57,7 @@ static bool	init_philos(t_env *env)
 		env->philos[i].cfg = &env->cfg;
 		env->philos[i].rts = &env->rts;
 		env->philos[i].lfork = &env->forks[i];
-		if (i == env->cfg.nb_philos - 1)
-			env->philos[i].rfork = &env->forks[0];
-		else
-			env->philos[i].rfork = &env->forks[(i + 1) / 3 + (i + 1) % 3];
+		env->philos[i].rfork = &env->forks[(i + 1) % env->cfg.nb_philos];
 		i++;
 	}
 	return (true);

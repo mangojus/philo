@@ -18,6 +18,8 @@ void	print_event(t_phi *p, t_stat status, long time)
 
 	if (status == THINK)
 		msg = "is thinking";
+	if (status == FORK)
+		msg = "has taken a fork";
 	if (status == EAT)
 		msg = "is eating";
 	if (status == SLEEP)
@@ -41,13 +43,13 @@ static bool	event(t_phi *p, t_stat status, long	duration)
 	print_event(p, status, time);
 	pthread_mutex_unlock(&p->rts->print_mtx);
 	smart_sleep(duration);
-	pthread_mutex_lock(&p->meal.mtx);
 	if (status == EAT)
 	{
+		pthread_mutex_lock(&p->meal.mtx);
 		p->meal.last = time;
 		p->meal.count++;
+		pthread_mutex_unlock(&p->meal.mtx);
 	}
-	pthread_mutex_unlock(&p->meal.mtx);
 	return (true);
 } 
 
@@ -66,13 +68,19 @@ void	*philo_loop(void *arg)
 		if (p->id % 2 == 0)
 		{
 			pthread_mutex_lock(&p->lfork->mtx);
+			if (!event(p, FORK, 0))
+				break;
 			pthread_mutex_lock(&p->rfork->mtx);
 		}
 		else
 		{
 			pthread_mutex_lock(&p->rfork->mtx);
+			if (!event(p, FORK, 0))
+				break;
 			pthread_mutex_lock(&p->lfork->mtx);
 		}
+		if (!event(p, FORK, 0))
+			break;
 		if (!event(p, EAT, p->cfg->time_to_eat))
 			break ;
 		pthread_mutex_unlock(&p->lfork->mtx);
@@ -96,7 +104,7 @@ static void	*monitor_loop(void *arg)
 		continue;
 //		usleep(1000);
 	c = 0;
-	while (true)
+	while (!env->rts.death_flag)
 	{
 		i = 0;
 		while (i < env->cfg.nb_philos)
@@ -109,7 +117,7 @@ static void	*monitor_loop(void *arg)
 				printf("%ld %d is dead\n", time, env->philos[i].id);
 				pthread_mutex_unlock(&env->philos[i].meal.mtx);
 				env->rts.death_flag = true;
-				return (NULL);
+				break ;
 			}
 			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			i++;
