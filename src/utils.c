@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:42:06 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/19 15:24:12 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/20 18:55:29 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,3 +45,52 @@ long	atol(const char *nptr) //change into strict_atol for overflow
     return (res * sign);
 }
 
+bool	check_full(t_phi *p)
+{
+	pthread_mutex_lock(&p->meal.mtx);
+	p->meal.last = get_time();
+	p->meal.count++;
+	if (p->meal.count == p->cfg->max_meals)
+	{
+		pthread_mutex_unlock(&p->meal.mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&p->meal.mtx);
+	return (false);
+}
+
+bool	check_death(t_cfg *cfg)
+{
+	pthread_mutex_lock(&cfg->death_mtx);
+	if (cfg->death_flag == true)
+	{
+		pthread_mutex_unlock(&cfg->death_mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&cfg->death_mtx);
+	return (false);
+}
+
+bool	print_output(t_phi *p, char *msg)
+{
+	long	time;
+
+	if (check_death(p->cfg))
+		return (false);
+	time = get_time() - p->cfg->start;
+	pthread_mutex_lock(&p->cfg->print_mtx);
+	printf("%ld %d %s\n", time, p->id, msg); 
+	pthread_mutex_unlock(&p->cfg->print_mtx);
+	return (true);
+}
+
+bool	thread_barrier(t_cfg *cfg)
+{
+	while (cfg->start == -1)
+	{
+		if (cfg->status != ERR_OK)
+			return (false);
+//		usleep(500);
+	}
+	return (true);
+}

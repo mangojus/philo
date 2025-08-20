@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/19 17:02:31 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/20 18:39:56 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,9 +65,8 @@ typedef struct s_philosopher
 	int						id;
 	pthread_t				tid;
 	t_meal					meal;
-	t_fork					*forks[2];
+	t_fork					*f[2];
 	struct s_config			*cfg;
-	struct s_runtime_state	*rts;
 }	t_phi;
 
 typedef struct s_config
@@ -78,40 +77,43 @@ typedef struct s_config
 	int				time_to_eat;
 	int				time_to_sleep;
 	int				max_meals;
+	int				nb_threads;
+	int				nb_mutexes;
+	t_fork			*forks;
+	t_mtx			death_mtx;
+	t_mtx			print_mtx;
+	bool			death_flag;
+	t_err			status;
 }	t_cfg;
-
-typedef struct s_runtime_state
-{
-	bool	death_flag;
-	t_mtx	death_mtx;
-	t_mtx	print_mtx;
-}	t_rts;
-
-typedef struct s_system
-{
-	int		nb_threads;
-	t_err	status;
-}	t_sys;
 
 typedef struct s_environment
 {
-	struct s_philosopher	*philos;
 	struct s_config			cfg;
-	struct s_runtime_state	rts;
-	struct s_systen			sys;
+	struct s_philosopher	*philos;
+	t_mtx					*mutexes;
 	pthread_t				monitor;
-	t_fork					*forks;
-	t_err					status;
 }	t_env;
 
 t_err	init_env(t_env *env, int argc, char **argv);
 bool	run_simulation(t_env *env, t_phi *philo);
 void	cleanup(t_env *env);
+void	clean_mutexes(t_mtx *mutexes, int count);
 
 long	get_time(void);
 void	smart_sleep(long duration);
 
 int		is_digit(int c);
 long	atol(const char *nptr);
+
+bool	take_fork(t_fork *fork);
+void	drop_fork(t_fork *fork);
+bool	assign_forks(t_phi *p);
+bool	eat(t_phi *p);
+bool	rest(t_phi *p);
+
+bool	check_death(t_cfg *cfg);
+bool	check_full(t_phi *p);
+bool	print_output(t_phi *p, char *msg);
+bool	thread_barrier(t_cfg *cfg);
 
 #endif

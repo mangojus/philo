@@ -6,7 +6,7 @@
 #    By: rshin <marvin@42.fr>                       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/21 09:17:03 by rshin             #+#    #+#              #
-#    Updated: 2025/07/21 16:31:05 by rshin            ###   ########.fr        #
+#    Updated: 2025/08/20 18:40:34 by rshin            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,6 +22,8 @@ SRC = $(SRC_D)/main.c \
 	  $(SRC_D)/init.c \
 	  $(SRC_D)/run.c \
 	  $(SRC_D)/time.c \
+	  $(SRC_D)/action.c \
+	  $(SRC_D)/clean.c \
 	  $(SRC_D)/utils.c 
 
 OBJ = $(patsubst $(SRC_D)/%.c, $(BLD_D)/%.o, $(SRC))
