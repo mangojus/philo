@@ -28,3 +28,15 @@ void	smart_sleep(long duration)
 	while (end_time > get_time())
 		usleep(1000);
 }
+
+void	sync_time(long target_t)
+{
+	long	curr_t;
+	long	rem_t;
+
+	curr_t = get_time();
+	rem_t = target_t - curr_t;
+//	printf("remainder %ld\n", rem_t);
+	if (rem_t > 0)
+		usleep(rem_t * 1000);
+}

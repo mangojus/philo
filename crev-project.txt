@@ -1,0 +1,932 @@
+Project Directory Structure:
+├── Makefile
+├── include
+│   └── philo.h
+├── src
+│   ├── action.c
+│   ├── clean.c
+│   ├── foo.c
+│   ├── init.c
+│   ├── main.c
+│   ├── run.c
+│   ├── time.c
+│   └── utils.c
+
+
+File: 
+Makefile
+Content: 
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: rshin <marvin@42.fr>                       +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/07/21 09:17:03 by rshin             #+#    #+#              #
+#    Updated: 2025/08/20 18:40:34 by rshin            ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+NAME = philo
+
+CC = cc
+
+CFLAGS = -Wall -Werror -Wextra -g
+
+IFLAGS = -I $(INC_D) -MMD -MP
+
+SRC = $(SRC_D)/main.c \
+	  $(SRC_D)/init.c \
+	  $(SRC_D)/run.c \
+	  $(SRC_D)/time.c \
+	  $(SRC_D)/action.c \
+	  $(SRC_D)/clean.c \
+	  $(SRC_D)/utils.c 
+
+OBJ = $(patsubst $(SRC_D)/%.c, $(BLD_D)/%.o, $(SRC))
+
+DEP = $(patsubst $(SRC_D)/%.c, $(BLD_D)/%.d, $(SRC))
+
+SRC_D = src
+
+BLD_D = .build
+
+INC_D = include
+
+all: $(NAME)
+
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(IFLAGS) $(OBJ) -o $(NAME)
+
+$(BLD_D)/%.o: $(SRC_D)/%.c Makefile
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJ)
+
+fclean: clean
+	rm -rf $(BLD_D) $(NAME)
+
+re: fclean all
+
+-include $(DEP)
+
+.PHONY: all clean fclean re
+
+
+File: 
+include/philo.h
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philo.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 18:39:56 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef PHILO_H
+
+# define PHILO_H
+
+# include <unistd.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <stdbool.h>
+# include <string.h>
+# include <limits.h>
+# include <pthread.h>
+# include <sys/time.h>
+# include <time.h>
+
+typedef pthread_mutex_t t_mtx;
+
+typedef enum e_err
+{
+	ERR_OK = 0,
+	ERR_GLOBAL = 1,
+	ERR_INPUT = 2,
+	ERR_MALLOC = 3,
+	ERR_THREAD = 4,
+	ERR_MUTEX = 5,
+}	t_err;
+
+typedef enum e_act
+{
+	THINK = 1,
+	TAKE_FORK = 2,
+	DROP_FORK,
+	EAT = 4,
+	SLEEP = 8,
+	FULL = 16,
+	DEAD = 32,
+}	t_act;
+
+typedef struct s_meal
+{
+	long	last;
+	int		count;
+	t_mtx	mtx;
+}	t_meal;
+
+typedef struct s_fork
+{
+	bool	is_taken;
+	t_mtx	mtx;
+}	t_fork;
+
+typedef struct s_philosopher
+{
+	int						id;
+	pthread_t				tid;
+	t_meal					meal;
+	t_fork					*f[2];
+	struct s_config			*cfg;
+}	t_phi;
+
+typedef struct s_config
+{
+	long			start;
+	int				nb_philos;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				max_meals;
+	int				nb_threads;
+	int				nb_mutexes;
+	t_fork			*forks;
+	t_mtx			death_mtx;
+	t_mtx			print_mtx;
+	bool			death_flag;
+	t_err			status;
+}	t_cfg;
+
+typedef struct s_environment
+{
+	struct s_config			cfg;
+	struct s_philosopher	*philos;
+	t_mtx					*mutexes;
+	pthread_t				monitor;
+}	t_env;
+
+t_err	init_env(t_env *env, int argc, char **argv);
+bool	run_simulation(t_env *env, t_phi *philo);
+void	cleanup(t_env *env);
+void	clean_mutexes(t_mtx *mutexes, int count);
+
+long	get_time(void);
+void	smart_sleep(long duration);
+
+int		is_digit(int c);
+long	atol(const char *nptr);
+
+bool	take_fork(t_fork *fork);
+void	drop_fork(t_fork *fork);
+bool	assign_forks(t_phi *p);
+bool	eat(t_phi *p);
+bool	rest(t_phi *p);
+
+bool	check_death(t_cfg *cfg);
+bool	check_full(t_phi *p);
+bool	print_output(t_phi *p, char *msg);
+bool	thread_barrier(t_cfg *cfg);
+
+#endif
+
+
+File: 
+src/action.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   action.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/20 17:46:50 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 19:04:40 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+bool	take_fork(t_fork *fork)
+{
+	pthread_mutex_lock(&fork->mtx);
+	if (fork->is_taken == false)
+	{
+		fork->is_taken = true;
+		pthread_mutex_unlock(&fork->mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&fork->mtx);
+	return (false);
+}
+
+void	drop_fork(t_fork *fork)
+{
+	pthread_mutex_lock(&fork->mtx);
+	fork->is_taken = false;
+	pthread_mutex_unlock(&fork->mtx);
+}
+
+bool	assign_forks(t_phi *p)
+{
+	while (true)
+	{
+		if (!take_fork(p->f[0]))
+			continue;
+		if (!print_output(p, "has taken a fork"))
+			return (false);
+		if (!take_fork(p->f[1]))
+		{
+			drop_fork(p->f[0]);
+			usleep(500);
+			continue;
+		}
+		if (!print_output(p, "has taken a fork"))
+			return (false);
+		else
+			break ;
+	}
+	return (true);
+}
+
+
+File: 
+src/clean.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   clean.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/20 15:36:40 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 18:50:50 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+void	cleanup(t_env *env)
+{
+	if (env->philos)
+	{
+		free(env->philos);
+		env->philos = NULL;
+	}
+	if (env->cfg.forks)
+	{
+		free(env->cfg.forks);
+		env->cfg.forks = NULL;
+	}
+	clean_mutexes(env->mutexes, env->cfg.nb_mutexes);
+//	clean_threads(env);
+}
+
+void	clean_mutexes(t_mtx *mutexes, int count)
+{
+	int	i;
+
+	i = 0;
+	while (i < count)
+	{
+		pthread_mutex_destroy(&mutexes[i]);
+		i++;
+	}
+	free(mutexes);
+	mutexes = NULL;
+}
+
+
+File: 
+src/foo.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   foo.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/23 14:42:21 by rshin             #+#    #+#             */
+/*   Updated: 2025/07/29 17:02:38 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+# include <unistd.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <stdbool.h>
+# include <string.h>
+# include <limits.h>
+# include <pthread.h>
+# include <sys/time.h>
+# include <time.h>
+
+typedef pthread_mutex_t t_mtx;
+
+typedef struct	s_fork
+{
+	bool	is_taken;
+	t_mtx	mutex;
+}	t_fork;
+
+typedef struct	s_time
+{
+	long	start;
+	long	end;
+	long	s;
+	long	last_s;
+}	t_time;
+
+typedef struct	s_philo
+{
+	pthread_t		tid;
+	int				id;
+	struct s_fork	*l_fork;
+	struct s_fork	*r_fork;
+	bool			is_dead;
+	struct s_param	*param;
+}	t_phi;
+
+typedef struct	s_param
+{
+	struct s_philo	*philo;
+	pthread_t		monitor;
+	struct s_time	time;
+	bool			begin;
+	bool			end;
+	long			time_to_die;
+	long			time_to_eat;
+	long			time_to_sleep;
+}	t_param;
+
+long	get_time(void)
+{
+	struct timeval	time;
+	
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+}
+
+void	ft_usleep(long duration)
+{
+	long	end_time;
+
+	end_time = get_time() + duration;
+	while (end_time > get_time();
+		usleep(1000);
+}
+
+void	*routine(void *arg)
+{
+	t_phi	*p;
+	t_time	time;
+
+	p =	(t_phi *)arg;
+	while (!p->param->begin)
+		usleep(p->id * 1000);
+	while (true)
+	{
+		get_time(&(p->param->time));
+		printf("%ld %d is thinking\n", p->param->time.s, p->id);
+		if (p->id % 2 == 0)
+		{
+			pthread_mutex_lock(&p->l_fork->mutex);
+			pthread_mutex_lock(&p->r_fork->mutex);
+		}
+		else
+		{
+			pthread_mutex_lock(&p->r_fork->mutex);
+			pthread_mutex_lock(&p->l_fork->mutex);
+		}
+		get_time(&(p->param->time));
+		printf("%ld %d is eating\n", p->param->time.s, p->id);
+		ft_usleep(p->param->time.sleep);
+//		if (p->param->time.s - last_t >= p->param->time.die)
+//			p->is_dead = true;
+		pthread_mutex_unlock(&p->l_fork->mutex);
+		pthread_mutex_unlock(&p->r_fork->mutex);
+		get_time(&(p->param->time));
+		printf("%ld %d is sleeping\n", p->param->time.s, p->id);
+		ft_usleep(p->param->time.sleep);
+		if (p->param->end == true)
+		{
+			get_time(&(p->param->time));
+			printf("%ld %d is dead\n", p->param->time.s, p->id);
+			break;
+		}
+	}
+	return (NULL);
+}
+
+void	*monitor(void *arg)
+{
+	t_param	*param;
+	int		i;
+
+	param = (t_param *)arg;
+	while (true)
+	{
+		i = 0;
+		while (i < 3)
+		{
+			if (param->philo[i].is_dead)
+			{
+				printf("%d is dead, end of simulation\n", i);
+				param->end = true;
+				return (NULL);
+			}
+			i++;
+		}
+	}
+}
+
+int	main(int argc, char **argv)
+{
+	struct timeval	tv;
+	t_param	param;
+	t_phi	p[3];
+	t_fork	fork[3];
+	int		i;
+
+	(void)argc;
+	(void)argv;
+	memset(&param, 0, sizeof(t_param));
+	param.philo = p;
+	param.time.die = 200;
+	param.time.eat = 200;
+	param.time.sleep = 200;
+	i = 0;
+	while (i < 3)
+	{
+		memset(&p[i], 0, sizeof(t_phi));
+		memset(&fork[i], 0, sizeof(t_fork));
+		p[i].id = i + 1;
+		pthread_mutex_init((&fork[i].mutex), NULL);
+		p[i].param = &param;
+		i++;
+	}
+	i = 0;
+	while (i < 3)
+	{
+		p[i].l_fork = &fork[i];
+		if (i == 3 - 1)
+			p[i].r_fork = &fork[0];
+		else
+			p[i].r_fork = &fork[(i + 1) / 3 + (i + 1) % 3];
+		i++;
+	}
+	if (pthread_create(&param.monitor, NULL, &monitor, &param))
+		return (1);
+	i = 0;
+	while (i < 3)
+	{
+		if (pthread_create(&p[i].tid, NULL, &routine, &p[i]))
+			return (1);
+		i++;
+	}
+	gettimeofday(&tv, NULL);
+	param.time.start = tv.tv_usec;
+//	printf("%ld \n", tv.tv_usec);
+	param.begin = true;
+	while (true)
+	{
+		i++;
+	}
+	i = 0;
+	while (i < 3)
+	{
+		if (pthread_join(p[i].tid, NULL))
+			return (1);
+		pthread_mutex_destroy(&fork[i].mutex);
+		i++;
+	}
+	return (0);
+}
+
+
+File: 
+src/init.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   init.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 16:32:04 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 18:53:57 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+static bool	init_config(t_cfg *cfg, int argc, char **argv)
+{
+	int	param[5];
+	int	i;
+
+	i = 0;
+	while (i <= argc - 2)
+	{
+		param[i] = atol(argv[i + 1]);
+		if (param[i] > INT_MAX || param[i] < INT_MIN)
+			return (false);
+		i++;
+	}
+	cfg->start = -1;
+	cfg->nb_philos = param[0];
+	cfg->time_to_die = param[1];
+	cfg->time_to_eat = param[2];
+	cfg->time_to_sleep = param[3];
+	cfg->max_meals = param[4];
+	cfg->forks = malloc(cfg->nb_philos * sizeof(t_fork));
+	if (!cfg->forks)
+		return (false);
+	memset(cfg->forks, 0, sizeof(t_fork) * cfg->nb_philos);
+	i = 0;
+	return (true);
+}
+
+static bool	init_philos(t_env *env)
+{
+	int	i;
+
+	env->philos = malloc(env->cfg.nb_philos * sizeof(t_phi));
+	if (!env->philos)
+		return (false);
+	memset(env->philos, 0, sizeof(t_phi) * env->cfg.nb_philos);
+	i = 0;
+	while (i < env->cfg.nb_philos)
+	{
+		env->philos[i].id = i + 1;
+		env->philos[i].cfg = &env->cfg;
+		env->philos[i].f[(i + 1) % 2] = &env->cfg.forks[i];
+		env->philos[i].f[(i + 2) % 2] = &env->cfg.forks[(i + 1) % env->cfg.nb_philos];
+		i++;
+	}
+	return (true);
+}
+
+static bool	init_mutexes(t_env *env)
+{
+	int		i;
+
+	env->cfg.nb_mutexes = 2 + env->cfg.nb_philos * 2;
+	env->mutexes = malloc(env->cfg.nb_mutexes * sizeof(t_mtx));
+	if (!env->mutexes)
+		return (false);
+	i = 0;
+	while (i < env->cfg.nb_mutexes)
+	{
+		if (pthread_mutex_init(&env->mutexes[i], NULL))
+		{
+			clean_mutexes(env->mutexes, i);
+			return (false);
+		}
+		i++;
+	}
+	env->cfg.death_mtx = env->mutexes[0];
+	env->cfg.print_mtx = env->mutexes[1];
+	i = 0;
+	while (i < env->cfg.nb_philos)
+	{
+		env->philos[i].meal.mtx = env->mutexes[2 + i * 2];
+		env->cfg.forks[i].mtx = env->mutexes[2 + i * 2 + 1];
+		i++;
+	}
+	return (true);
+}
+
+t_err	init_env(t_env *env, int argc, char **argv)
+{
+	memset(env, 0, sizeof(t_env));
+	if (!init_config(&env->cfg, argc, argv))
+		return (ERR_MALLOC);
+	if (!init_philos(env))
+	{
+		free(env->cfg.forks);
+		return (ERR_MALLOC);
+	}
+	if (!init_mutexes(env))
+	{
+		free(env->philos);
+		free(env->cfg.forks);
+		return (ERR_MUTEX);
+	}
+	return (ERR_OK);
+}
+
+
+File: 
+src/main.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 17:56:38 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h" 
+
+static bool	args_checker(int argc, char **argv)
+{
+	int	i;
+	int	j;
+
+	if (argc < 5 || argc > 6)
+		return (false);
+	i = 1;
+	while (argv[i])
+	{
+		j = 0;
+		if (argv[i][0] == '-')
+			return (false);
+		while (argv[i][j])
+		{
+			if (!is_digit(argv[i][j++]))
+				return (false);
+		}
+		i++;
+	}
+	if (atol(argv[1]) > 200) //remove depending on correction
+		return (false);
+	return (true);
+}
+
+int	main(int argc, char **argv)
+{
+	t_env	env;
+
+	if (!args_checker(argc, argv))
+	{
+		printf("Invalid arguments\n");
+		return (ERR_INPUT);
+	}
+	env.cfg.status = init_env(&env, argc, argv);
+	if (env.cfg.status != ERR_OK)
+		return (env.cfg.status);
+	run_simulation(&env, env.philos);
+	cleanup(&env);
+	return (env.cfg.status);
+}
+
+
+File: 
+src/run.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   run.c                                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 19:00:14 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h" 
+
+void	*philo_loop(void *arg)
+{
+	t_phi	*p;
+
+	p = (t_phi *)arg;
+	if (!thread_barrier(p->cfg))
+		return (NULL);
+	while (true)
+	{
+		if (!print_output(p, "is thinking"))
+			break ;
+		if (!assign_forks(p))
+			break ;
+		if (!print_output(p, "is eating"))
+			break ;
+		smart_sleep(p->cfg->time_to_eat);
+		if (!check_full(p))
+			break ;
+		drop_fork(p->f[0]);
+		drop_fork(p->f[1]);
+		if (!print_output(p, "is sleeping"))
+			break;
+		smart_sleep(p->cfg->time_to_sleep);
+	}
+	return (NULL);
+}
+
+static void	*monitor_loop(void *arg)
+{
+	t_env	*env;
+	long	elapsed_time;
+	int		i;
+
+	env = (t_env *)arg;
+	if (!thread_barrier(&env->cfg))
+		return (NULL);
+	while (!check_death(&env->cfg))
+	{
+		i = 0;
+		while (i < env->cfg.nb_philos)
+		{
+			pthread_mutex_lock(&env->philos[i].meal.mtx);
+			elapsed_time = get_time() - env->philos[i].meal.last;
+			pthread_mutex_unlock(&env->philos[i].meal.mtx);
+			if (elapsed_time > env->cfg.time_to_die)
+			{
+				print_output(&env->philos[i], "is dead");
+				pthread_mutex_lock(&env->cfg.death_mtx);
+				env->cfg.death_flag = true;
+				pthread_mutex_unlock(&env->cfg.death_mtx);
+				break ;
+			}
+			i++;
+		}
+	}
+	return (NULL);
+}
+
+bool	run_simulation(t_env *env, t_phi *philos)
+{
+	int		i;
+
+	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
+		return (false);
+	i = 0;
+	while (i < env->cfg.nb_philos)
+	{
+		if (pthread_create((&philos[i].tid), NULL, &philo_loop, &philos[i]))
+		{
+			env->cfg.status = ERR_THREAD;
+			break;
+		}
+		i++;
+	}
+	env->cfg.nb_threads = i + 1;
+	if (i == env->cfg.nb_philos)
+	{
+		usleep(1000);
+		env->cfg.start = get_time();
+	}
+	while (--i > 0)
+		pthread_join(philos[i].tid, NULL);
+	pthread_join(env->monitor, NULL);
+	return (true);
+}
+
+
+File: 
+src/time.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   time.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/18 10:58:52 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h" 
+
+long	get_time(void)
+{
+	struct timeval	time;
+
+	gettimeofday(&time, NULL);
+	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+}
+
+void	smart_sleep(long duration)
+{
+	long	end_time;
+
+	end_time = get_time() + duration;
+	while (end_time > get_time())
+		usleep(1000);
+}
+
+
+File: 
+src/utils.c
+Content: 
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/21 09:42:06 by rshin             #+#    #+#             */
+/*   Updated: 2025/08/20 18:55:29 by rshin            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "philo.h"
+
+int	is_digit(int c)
+{
+	if (c >= '0' && c <= '9')
+		return (c);
+	return (0);
+}
+
+long	atol(const char *nptr) //change into strict_atol for overflow
+{
+    size_t	i;
+    int		sign;
+    long	res;
+
+    i = 0;
+    sign = 1;
+    res = 0;
+    while ((nptr[i] >= '\t' && nptr[i] <= '\r') || nptr[i] == ' ')
+        i++;
+    if (nptr[i] == '-')
+    {
+        sign = -1;
+        i++;
+    }
+    else if (nptr[i] == '+')
+        i++;
+    while (nptr[i] && is_digit(nptr[i]))
+    {
+        res = res * 10 + (nptr[i] - '0');
+        i++;
+    }
+    return (res * sign);
+}
+
+bool	check_full(t_phi *p)
+{
+	pthread_mutex_lock(&p->meal.mtx);
+	p->meal.last = get_time();
+	p->meal.count++;
+	if (p->meal.count == p->cfg->max_meals)
+	{
+		pthread_mutex_unlock(&p->meal.mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&p->meal.mtx);
+	return (false);
+}
+
+bool	check_death(t_cfg *cfg)
+{
+	pthread_mutex_lock(&cfg->death_mtx);
+	if (cfg->death_flag == true)
+	{
+		pthread_mutex_unlock(&cfg->death_mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(&cfg->death_mtx);
+	return (false);
+}
+
+bool	print_output(t_phi *p, char *msg)
+{
+	long	time;
+
+	if (check_death(p->cfg))
+		return (false);
+	time = get_time() - p->cfg->start;
+	pthread_mutex_lock(&p->cfg->print_mtx);
+	printf("%ld %d %s\n", time, p->id, msg); 
+	pthread_mutex_unlock(&p->cfg->print_mtx);
+	return (true);
+}
+
+bool	thread_barrier(t_cfg *cfg)
+{
+	while (cfg->start == -1)
+	{
+		if (cfg->status != ERR_OK)
+			return (false);
+//		usleep(500);
+	}
+	return (true);
+}
+
+

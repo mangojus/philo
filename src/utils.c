@@ -50,9 +50,11 @@ bool	check_full(t_phi *p)
 	pthread_mutex_lock(&p->meal.mtx);
 	p->meal.last = get_time();
 	p->meal.count++;
-	if (p->meal.count == p->cfg->max_meals)
+	if (p->meal.count == p->cfg->max_meals && p->cfg->max_meals != 0)
 	{
+		p->cfg->full++;
 		pthread_mutex_unlock(&p->meal.mtx);
+		print_output(p, "full");
 		return (true);
 	}
 	pthread_mutex_unlock(&p->meal.mtx);
@@ -71,26 +73,20 @@ bool	check_death(t_cfg *cfg)
 	return (false);
 }
 
-bool	print_output(t_phi *p, char *msg)
+void	print_output(t_phi *p, char *msg)
 {
 	long	time;
 
-	if (check_death(p->cfg))
-		return (false);
 	time = get_time() - p->cfg->start;
 	pthread_mutex_lock(&p->cfg->print_mtx);
 	printf("%ld %d %s\n", time, p->id, msg); 
 	pthread_mutex_unlock(&p->cfg->print_mtx);
-	return (true);
 }
 
 bool	thread_barrier(t_cfg *cfg)
 {
-	while (cfg->start == -1)
-	{
-		if (cfg->status != ERR_OK)
-			return (false);
-//		usleep(500);
-	}
+	sync_time(cfg->start);
+	if (cfg->status != ERR_OK)
+		return (false);
 	return (true);
 }

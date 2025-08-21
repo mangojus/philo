@@ -14,7 +14,7 @@
 
 static bool	init_config(t_cfg *cfg, int argc, char **argv)
 {
-	int	param[5];
+	static int	param[5];
 	int	i;
 
 	i = 0;
@@ -63,7 +63,7 @@ static bool	init_mutexes(t_env *env)
 {
 	int		i;
 
-	env->cfg.nb_mutexes = 2 + env->cfg.nb_philos * 2;
+	env->cfg.nb_mutexes = 3 + env->cfg.nb_philos * 2;
 	env->mutexes = malloc(env->cfg.nb_mutexes * sizeof(t_mtx));
 	if (!env->mutexes)
 		return (false);
@@ -79,11 +79,12 @@ static bool	init_mutexes(t_env *env)
 	}
 	env->cfg.death_mtx = env->mutexes[0];
 	env->cfg.print_mtx = env->mutexes[1];
+	env->cfg.barrier_mtx = env->mutexes[2];
 	i = 0;
 	while (i < env->cfg.nb_philos)
 	{
-		env->philos[i].meal.mtx = env->mutexes[2 + i * 2];
-		env->cfg.forks[i].mtx = env->mutexes[2 + i * 2 + 1];
+		env->philos[i].meal.mtx = env->mutexes[3 + i * 2];
+		env->cfg.forks[i].mtx = env->mutexes[3 + i * 2 + 1];
 		i++;
 	}
 	return (true);

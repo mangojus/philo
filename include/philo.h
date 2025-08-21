@@ -77,11 +77,13 @@ typedef struct s_config
 	int				time_to_eat;
 	int				time_to_sleep;
 	int				max_meals;
+	int				full;
 	int				nb_threads;
 	int				nb_mutexes;
 	t_fork			*forks;
 	t_mtx			death_mtx;
 	t_mtx			print_mtx;
+	t_mtx			barrier_mtx;
 	bool			death_flag;
 	t_err			status;
 }	t_cfg;
@@ -108,12 +110,12 @@ long	atol(const char *nptr);
 bool	take_fork(t_fork *fork);
 void	drop_fork(t_fork *fork);
 bool	assign_forks(t_phi *p);
-bool	eat(t_phi *p);
-bool	rest(t_phi *p);
+bool	action(t_phi *p, t_act action);
 
+void	sync_time(long target_t);
 bool	check_death(t_cfg *cfg);
 bool	check_full(t_phi *p);
-bool	print_output(t_phi *p, char *msg);
+void	print_output(t_phi *p, char *msg);
 bool	thread_barrier(t_cfg *cfg);
 
 #endif

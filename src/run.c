@@ -17,24 +17,25 @@ void	*philo_loop(void *arg)
 	t_phi	*p;
 
 	p = (t_phi *)arg;
-	if (!thread_barrier(p->cfg))
+	pthread_mutex_lock(&p->meal.mtx);
+	p->meal.last = p->cfg->start;
+	pthread_mutex_unlock(&p->meal.mtx);
+	sync_time(p->cfg->start);
+	if (p->id % 2 != 1 && p->id != p->cfg->nb_philos)
+		usleep(1000);
+	if (p->id == p->cfg->nb_philos && p->id % 2 == 1)
+		usleep(2000);
+//	print_output(p, "entered");
+	if (p->cfg->status != ERR_OK)
 		return (NULL);
 	while (true)
 	{
-		if (!print_output(p, "is thinking"))
+		if (!action(p, THINK))
 			break ;
-		if (!assign_forks(p))
+		if (!action(p, EAT))
 			break ;
-		if (!print_output(p, "is eating"))
-			break ;
-		smart_sleep(p->cfg->time_to_eat);
-		if (!check_full(p))
-			break ;
-		drop_fork(p->f[0]);
-		drop_fork(p->f[1]);
-		if (!print_output(p, "is sleeping"))
+		if (!action(p, SLEEP))
 			break;
-		smart_sleep(p->cfg->time_to_sleep);
 	}
 	return (NULL);
 }
@@ -46,14 +47,17 @@ static void	*monitor_loop(void *arg)
 	int		i;
 
 	env = (t_env *)arg;
-	if (!thread_barrier(&env->cfg))
+	sync_time(env->cfg.start);
+	if (env->cfg.status != ERR_OK)
 		return (NULL);
 	while (!check_death(&env->cfg))
 	{
 		i = 0;
-		while (i < env->cfg.nb_philos)
+		while (i < env->cfg.nb_philos && env->cfg.start != -1)
 		{
 			pthread_mutex_lock(&env->philos[i].meal.mtx);
+			if (env->cfg.full == env->cfg.nb_philos)
+				return (NULL);
 			elapsed_time = get_time() - env->philos[i].meal.last;
 			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			if (elapsed_time > env->cfg.time_to_die)
@@ -66,6 +70,7 @@ static void	*monitor_loop(void *arg)
 			}
 			i++;
 		}
+		usleep(100);
 	}
 	return (NULL);
 }
@@ -74,6 +79,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
+	env->cfg.start = get_time() + 500;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 		return (false);
 	i = 0;
@@ -87,11 +93,6 @@ bool	run_simulation(t_env *env, t_phi *philos)
 		i++;
 	}
 	env->cfg.nb_threads = i + 1;
-	if (i == env->cfg.nb_philos)
-	{
-		usleep(1000);
-		env->cfg.start = get_time();
-	}
 	while (--i > 0)
 		pthread_join(philos[i].tid, NULL);
 	pthread_join(env->monitor, NULL);
