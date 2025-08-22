@@ -41,6 +41,8 @@ static bool	init_config(t_cfg *cfg, int argc, char **argv)
 
 static bool	init_philos(t_env *env)
 {
+	t_fork	*lfork;
+	t_fork	*rfork;
 	int	i;
 
 	env->philos = malloc(env->cfg.nb_philos * sizeof(t_phi));
@@ -52,8 +54,10 @@ static bool	init_philos(t_env *env)
 	{
 		env->philos[i].id = i + 1;
 		env->philos[i].cfg = &env->cfg;
-		env->philos[i].f[(i + 1) % 2] = &env->cfg.forks[i];
-		env->philos[i].f[(i + 2) % 2] = &env->cfg.forks[(i + 1) % env->cfg.nb_philos];
+		lfork = &env->cfg.forks[i];
+		rfork = &env->cfg.forks[(i + 1) % env->cfg.nb_philos];
+		env->philos[i].f[(i + 1) % 2] = lfork;
+		env->philos[i].f[(i + 2) % 2] = rfork;
 		i++;
 	}
 	return (true);

@@ -22,9 +22,9 @@ void	*philo_loop(void *arg)
 	pthread_mutex_unlock(&p->meal.mtx);
 	sync_time(p->cfg->start);
 	if (p->id % 2 != 1 && p->id != p->cfg->nb_philos)
-		usleep(1000);
-	if (p->id == p->cfg->nb_philos && p->id % 2 == 1)
 		usleep(2000);
+	if (p->id == p->cfg->nb_philos && p->id % 2 == 1)
+		usleep(1000);
 //	print_output(p, "entered");
 	if (p->cfg->status != ERR_OK)
 		return (NULL);
