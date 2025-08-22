@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/18 10:58:52 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/22 14:37:34 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void	smart_sleep(long duration)
 
 	end_time = get_time() + duration;
 	while (end_time > get_time())
-		usleep(1000);
+		usleep(500);
 }
 
 void	sync_time(long target_t)

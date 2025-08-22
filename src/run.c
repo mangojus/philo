@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 19:00:14 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/22 14:36:43 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,8 @@ void	*philo_loop(void *arg)
 	p->meal.last = p->cfg->start;
 	pthread_mutex_unlock(&p->meal.mtx);
 	sync_time(p->cfg->start);
-	if (p->id % 2 != 1 && p->id != p->cfg->nb_philos)
-		usleep(2000);
-	if (p->id == p->cfg->nb_philos && p->id % 2 == 1)
-		usleep(1000);
+	if (p->id % 2 != 1 )
+		usleep(500);
 //	print_output(p, "entered");
 	if (p->cfg->status != ERR_OK)
 		return (NULL);
@@ -70,7 +68,7 @@ static void	*monitor_loop(void *arg)
 			}
 			i++;
 		}
-		usleep(100);
+//		usleep(100);
 	}
 	return (NULL);
 }
