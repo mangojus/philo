@@ -14,7 +14,7 @@
 
 static bool	init_config(t_cfg *cfg, int argc, char **argv)
 {
-	static int	param[5];
+	static long	param[5];
 	int	i;
 
 	i = 0;

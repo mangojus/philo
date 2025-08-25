@@ -15,15 +15,17 @@
 void	*philo_loop(void *arg)
 {
 	t_phi	*p;
+//	long	time;
 
 	p = (t_phi *)arg;
 	pthread_mutex_lock(&p->meal.mtx);
 	p->meal.last = p->cfg->start;
 	pthread_mutex_unlock(&p->meal.mtx);
+//	time = get_time() - p->cfg->start;
+//	printf("%ld start\n", time);
 	sync_time(p->cfg->start);
-	if (p->id % 2 != 1 )
-		usleep(500);
-//	print_output(p, "entered");
+	if (p->id % 2 != 0)
+		smart_sleep(p->cfg->time_to_eat / 2);
 	if (p->cfg->status != ERR_OK)
 		return (NULL);
 	while (true)
@@ -60,7 +62,7 @@ static void	*monitor_loop(void *arg)
 			pthread_mutex_unlock(&env->philos[i].meal.mtx);
 			if (elapsed_time > env->cfg.time_to_die)
 			{
-				print_output(&env->philos[i], "is dead");
+				print_output(&env->philos[i], "died");
 				pthread_mutex_lock(&env->cfg.death_mtx);
 				env->cfg.death_flag = true;
 				pthread_mutex_unlock(&env->cfg.death_mtx);
@@ -77,9 +79,12 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
-	env->cfg.start = get_time() + 500;
+	env->cfg.start = get_time() + 500 + env->cfg.nb_philos;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
+	{
+		env->cfg.status = ERR_THREAD;
 		return (false);
+	}
 	i = 0;
 	while (i < env->cfg.nb_philos)
 	{

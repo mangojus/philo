@@ -19,7 +19,7 @@ int	is_digit(int c)
 	return (0);
 }
 
-long	atol(const char *nptr) //change into strict_atol for overflow
+long	atol(const char *nptr)
 {
     size_t	i;
     int		sign;
@@ -71,6 +71,19 @@ bool	check_death(t_cfg *cfg)
 	}
 	pthread_mutex_unlock(&cfg->death_mtx);
 	return (false);
+}
+
+t_err	print_error(t_err error)
+{
+	if (error == ERR_INPUT)
+		printf("philo: Invalid arguments\n");
+	else if (error == ERR_MALLOC)
+		printf("philo: Malloc creation failure\n");
+	else if (error == ERR_THREAD)
+		printf("philo: Thread creation failure\n");
+	else if (error == ERR_MUTEX)
+		printf("philo: Mutex creation failure\n");
+	return (error);
 }
 
 void	print_output(t_phi *p, char *msg)

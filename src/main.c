@@ -32,8 +32,6 @@ static bool	args_checker(int argc, char **argv)
 		}
 		i++;
 	}
-	if (atol(argv[1]) > 200) //remove depending on correction
-		return (false);
 	return (true);
 }
 
@@ -42,14 +40,11 @@ int	main(int argc, char **argv)
 	t_env	env;
 
 	if (!args_checker(argc, argv))
-	{
-		printf("Invalid arguments\n");
-		return (ERR_INPUT);
-	}
+		return (print_error(ERR_INPUT));
 	env.cfg.status = init_env(&env, argc, argv);
 	if (env.cfg.status != ERR_OK)
-		return (env.cfg.status);
-	run_simulation(&env, env.philos);
+		return (print_error(env.cfg.status));
+	env.cfg.status = run_simulation(&env, env.philos);
 	cleanup(&env);
-	return (env.cfg.status);
+	return (print_error(env.cfg.status));
 }

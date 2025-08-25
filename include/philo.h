@@ -117,5 +117,6 @@ bool	check_death(t_cfg *cfg);
 bool	check_full(t_phi *p);
 void	print_output(t_phi *p, char *msg);
 bool	thread_barrier(t_cfg *cfg);
+t_err	print_error(t_err error);
 
 #endif
