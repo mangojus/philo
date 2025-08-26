@@ -79,7 +79,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
-	env->cfg.start = get_time() + 3000 + env->cfg.nb_philos;
+	env->cfg.start = get_time() + 1000 + env->cfg.nb_philos;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 	{
 		env->cfg.status = ERR_THREAD;

@@ -67,6 +67,7 @@ typedef struct s_philosopher
 	t_meal					meal;
 	t_fork					*f[2];
 	struct s_config			*cfg;
+	int						cycle;
 }	t_phi;
 
 typedef struct s_config
