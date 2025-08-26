@@ -47,29 +47,31 @@ long	atol(const char *nptr)
 
 bool	check_full(t_phi *p)
 {
-	pthread_mutex_lock(&p->meal.mtx);
+	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = get_time();
 	p->meal.count++;
 	if (p->meal.count == p->cfg->max_meals && p->cfg->max_meals != 0)
 	{
+		pthread_mutex_lock(p->cfg->death_mtx);
 		p->cfg->full++;
-		pthread_mutex_unlock(&p->meal.mtx);
+		pthread_mutex_unlock(p->cfg->death_mtx);
+		pthread_mutex_unlock(p->meal.mtx);
 		print_output(p, "full");
 		return (true);
 	}
-	pthread_mutex_unlock(&p->meal.mtx);
+	pthread_mutex_unlock(p->meal.mtx);
 	return (false);
 }
 
 bool	check_death(t_cfg *cfg)
 {
-	pthread_mutex_lock(&cfg->death_mtx);
+	pthread_mutex_lock(cfg->death_mtx);
 	if (cfg->death_flag == true)
 	{
-		pthread_mutex_unlock(&cfg->death_mtx);
+		pthread_mutex_unlock(cfg->death_mtx);
 		return (true);
 	}
-	pthread_mutex_unlock(&cfg->death_mtx);
+	pthread_mutex_unlock(cfg->death_mtx);
 	return (false);
 }
 
@@ -90,10 +92,15 @@ void	print_output(t_phi *p, char *msg)
 {
 	long	time;
 
+	pthread_mutex_lock(p->cfg->print_mtx);
+	if (check_death(p->cfg))
+	{
+		pthread_mutex_unlock(p->cfg->print_mtx);
+		return ;
+	}
 	time = get_time() - p->cfg->start;
-	pthread_mutex_lock(&p->cfg->print_mtx);
 	printf("%ld %d %s\n", time, p->id, msg); 
-	pthread_mutex_unlock(&p->cfg->print_mtx);
+	pthread_mutex_unlock(p->cfg->print_mtx);
 }
 
 bool	thread_barrier(t_cfg *cfg)

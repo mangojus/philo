@@ -51,13 +51,13 @@ typedef struct s_meal
 {
 	long	last;
 	int		count;
-	t_mtx	mtx;
+	t_mtx	*mtx;
 }	t_meal;
 
 typedef struct s_fork
 {
 	bool	is_taken;
-	t_mtx	mtx;
+	t_mtx	*mtx;
 }	t_fork;
 
 typedef struct s_philosopher
@@ -67,7 +67,6 @@ typedef struct s_philosopher
 	t_meal					meal;
 	t_fork					*f[2];
 	struct s_config			*cfg;
-	int						cycle;
 }	t_phi;
 
 typedef struct s_config
@@ -82,9 +81,8 @@ typedef struct s_config
 	int				nb_threads;
 	int				nb_mutexes;
 	t_fork			*forks;
-	t_mtx			death_mtx;
-	t_mtx			print_mtx;
-	t_mtx			barrier_mtx;
+	t_mtx			*death_mtx;
+	t_mtx			*print_mtx;
 	bool			death_flag;
 	t_err			status;
 }	t_cfg;
@@ -103,7 +101,7 @@ void	cleanup(t_env *env);
 void	clean_mutexes(t_mtx *mutexes, int count);
 
 long	get_time(void);
-void	smart_sleep(long duration);
+void	smart_sleep(long duration, t_cfg *cfg);
 
 int		is_digit(int c);
 long	atol(const char *nptr);

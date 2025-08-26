@@ -20,13 +20,17 @@ long	get_time(void)
 	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
 }
 
-void	smart_sleep(long duration)
+void	smart_sleep(long duration, t_cfg *cfg)
 {
 	long	end_time;
 
 	end_time = get_time() + duration;
 	while (end_time > get_time())
+	{
+		if (check_death(cfg))
+			break;
 		usleep(100);
+	}
 }
 
 void	sync_time(long target_t)
