@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/22 14:36:43 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/26 17:54:07 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
-	env->cfg.start = get_time() + 500 + env->cfg.nb_philos;
+	env->cfg.start = get_time() + 3000 + env->cfg.nb_philos;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 	{
 		env->cfg.status = ERR_THREAD;
