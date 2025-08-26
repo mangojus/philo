@@ -21,58 +21,28 @@ int	is_digit(int c)
 
 long	atol(const char *nptr)
 {
-    size_t	i;
-    int		sign;
-    long	res;
+	size_t	i;
+	int		sign;
+	long	res;
 
-    i = 0;
-    sign = 1;
-    res = 0;
-    while ((nptr[i] >= '\t' && nptr[i] <= '\r') || nptr[i] == ' ')
-        i++;
-    if (nptr[i] == '-')
-    {
-        sign = -1;
-        i++;
-    }
-    else if (nptr[i] == '+')
-        i++;
-    while (nptr[i] && is_digit(nptr[i]))
-    {
-        res = res * 10 + (nptr[i] - '0');
-        i++;
-    }
-    return (res * sign);
-}
-
-bool	check_full(t_phi *p)
-{
-	pthread_mutex_lock(p->meal.mtx);
-	p->meal.last = get_time();
-	p->meal.count++;
-	if (p->meal.count == p->cfg->max_meals && p->cfg->max_meals != 0)
+	i = 0;
+	sign = 1;
+	res = 0;
+	while ((nptr[i] >= '\t' && nptr[i] <= '\r') || nptr[i] == ' ')
+		i++;
+	if (nptr[i] == '-')
 	{
-		pthread_mutex_lock(p->cfg->death_mtx);
-		p->cfg->full++;
-		pthread_mutex_unlock(p->cfg->death_mtx);
-		pthread_mutex_unlock(p->meal.mtx);
-		print_output(p, "full");
-		return (true);
+		sign = -1;
+		i++;
 	}
-	pthread_mutex_unlock(p->meal.mtx);
-	return (false);
-}
-
-bool	check_death(t_cfg *cfg)
-{
-	pthread_mutex_lock(cfg->death_mtx);
-	if (cfg->death_flag == true)
+	else if (nptr[i] == '+')
+		i++;
+	while (nptr[i] && is_digit(nptr[i]))
 	{
-		pthread_mutex_unlock(cfg->death_mtx);
-		return (true);
+		res = res * 10 + (nptr[i] - '0');
+		i++;
 	}
-	pthread_mutex_unlock(cfg->death_mtx);
-	return (false);
+	return (res * sign);
 }
 
 t_err	print_error(t_err error)
@@ -99,14 +69,6 @@ void	print_output(t_phi *p, char *msg)
 		return ;
 	}
 	time = get_time() - p->cfg->start;
-	printf("%ld %d %s\n", time, p->id, msg); 
+	printf("%ld %d %s\n", time, p->id, msg);
 	pthread_mutex_unlock(p->cfg->print_mtx);
-}
-
-bool	thread_barrier(t_cfg *cfg)
-{
-	sync_time(cfg->start);
-	if (cfg->status != ERR_OK)
-		return (false);
-	return (true);
 }

@@ -15,14 +15,11 @@
 void	*philo_loop(void *arg)
 {
 	t_phi	*p;
-//	long	time;
 
 	p = (t_phi *)arg;
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = p->cfg->start;
 	pthread_mutex_unlock(p->meal.mtx);
-//	time = get_time() - p->cfg->start;
-//	printf("%ld start\n", time);
 	sync_time(p->cfg->start);
 	if (p->id % 2 != 0)
 		smart_sleep(p->cfg->time_to_eat / 2, p->cfg);
@@ -30,12 +27,13 @@ void	*philo_loop(void *arg)
 		return (NULL);
 	while (true)
 	{
-		if (!action(p, THINK))
+		print_output(p, "is thinking");
+		if (p->cfg->nb_philos % 2 == 1)
+			usleep(200);
+		if (!eat(p))
 			break ;
-		if (!action(p, EAT))
-			break ;
-		if (!action(p, SLEEP))
-			break;
+		print_output(p, "is sleeping");
+		smart_sleep(p->cfg->time_to_sleep, p->cfg);
 	}
 	return (NULL);
 }
@@ -93,11 +91,11 @@ bool	run_simulation(t_env *env, t_phi *philos)
 		if (pthread_create((&philos[i].tid), NULL, &philo_loop, &philos[i]))
 		{
 			env->cfg.status = ERR_THREAD;
-			break;
+			break ;
 		}
 		i++;
 	}
-	env->cfg.nb_threads = i + 1;
+	env->cfg.nb_threads = i;
 	while (--i >= 0)
 		pthread_join(philos[i].tid, NULL);
 	pthread_join(env->monitor, NULL);

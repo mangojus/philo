@@ -15,13 +15,13 @@
 static bool	init_config(t_cfg *cfg, int argc, char **argv)
 {
 	static long	param[5];
-	int	i;
+	int			i;
 
 	i = 0;
 	while (i <= argc - 2)
 	{
 		param[i] = atol(argv[i + 1]);
-		if (param[i] > INT_MAX || param[i] < INT_MIN)
+		if (param[i] > INT_MAX || param[i] < 0)
 			return (false);
 		i++;
 	}
@@ -35,7 +35,6 @@ static bool	init_config(t_cfg *cfg, int argc, char **argv)
 	if (!cfg->forks)
 		return (false);
 	memset(cfg->forks, 0, sizeof(t_fork) * cfg->nb_philos);
-	i = 0;
 	return (true);
 }
 
@@ -43,7 +42,7 @@ static bool	init_philos(t_env *env)
 {
 	t_fork	*lfork;
 	t_fork	*rfork;
-	int	i;
+	int		i;
 
 	env->philos = malloc(env->cfg.nb_philos * sizeof(t_phi));
 	if (!env->philos)
@@ -67,10 +66,6 @@ static bool	init_mutexes(t_env *env)
 {
 	int		i;
 
-	env->cfg.nb_mutexes = 3 + env->cfg.nb_philos * 2;
-	env->mutexes = malloc(env->cfg.nb_mutexes * sizeof(t_mtx));
-	if (!env->mutexes)
-		return (false);
 	i = 0;
 	while (i < env->cfg.nb_mutexes)
 	{
@@ -103,11 +98,19 @@ t_err	init_env(t_env *env, int argc, char **argv)
 		free(env->cfg.forks);
 		return (ERR_MALLOC);
 	}
+	env->cfg.nb_mutexes = 2 + env->cfg.nb_philos * 2;
+	env->mutexes = malloc(env->cfg.nb_mutexes * sizeof(t_mtx));
+	if (!env->mutexes)
+	{
+		free(env->philos);
+		free(env->cfg.forks);
+		return (ERR_MALLOC);
+	}
 	if (!init_mutexes(env))
 	{
 		free(env->philos);
 		free(env->cfg.forks);
 		return (ERR_MUTEX);
 	}
-	return (ERR_OK);
+ 	return (ERR_OK);
 }

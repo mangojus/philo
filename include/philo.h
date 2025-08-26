@@ -24,7 +24,7 @@
 # include <sys/time.h>
 # include <time.h>
 
-typedef pthread_mutex_t t_mtx;
+typedef pthread_mutex_t	t_mtx;
 
 typedef enum e_err
 {
@@ -39,12 +39,8 @@ typedef enum e_err
 typedef enum e_act
 {
 	THINK = 1,
-	TAKE_FORK = 2,
-	DROP_FORK,
-	EAT = 4,
-	SLEEP = 8,
-	FULL = 16,
-	DEAD = 32,
+	EAT = 2,
+	SLEEP = 4,
 }	t_act;
 
 typedef struct s_meal
@@ -109,13 +105,12 @@ long	atol(const char *nptr);
 bool	take_fork(t_fork *fork);
 void	drop_fork(t_fork *fork);
 bool	assign_forks(t_phi *p);
-bool	action(t_phi *p, t_act action);
+bool	eat(t_phi *p);
 
 void	sync_time(long target_t);
 bool	check_death(t_cfg *cfg);
 bool	check_full(t_phi *p);
 void	print_output(t_phi *p, char *msg);
-bool	thread_barrier(t_cfg *cfg);
 t_err	print_error(t_err error);
 
 #endif

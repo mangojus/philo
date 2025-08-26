@@ -28,19 +28,45 @@ void	smart_sleep(long duration, t_cfg *cfg)
 	while (end_time > get_time())
 	{
 		if (check_death(cfg))
-			break;
-		usleep(100);
+			break ;
+		usleep(500);
 	}
 }
 
 void	sync_time(long target_t)
 {
-	long	curr_t;
 	long	rem_t;
 
-	curr_t = get_time();
-	rem_t = target_t - curr_t;
-//	printf("remainder %ld\n", rem_t);
+	rem_t = target_t - get_time();
 	if (rem_t > 0)
 		usleep(rem_t * 1000);
+}
+
+bool	check_full(t_phi *p)
+{
+	pthread_mutex_lock(p->meal.mtx);
+	p->meal.last = get_time();
+	p->meal.count++;
+	if (p->meal.count == p->cfg->max_meals && p->cfg->max_meals != 0)
+	{
+		pthread_mutex_lock(p->cfg->death_mtx);
+		p->cfg->full++;
+		pthread_mutex_unlock(p->cfg->death_mtx);
+		pthread_mutex_unlock(p->meal.mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(p->meal.mtx);
+	return (false);
+}
+
+bool	check_death(t_cfg *cfg)
+{
+	pthread_mutex_lock(cfg->death_mtx);
+	if (cfg->death_flag == true)
+	{
+		pthread_mutex_unlock(cfg->death_mtx);
+		return (true);
+	}
+	pthread_mutex_unlock(cfg->death_mtx);
+	return (false);
 }

@@ -25,7 +25,6 @@ void	cleanup(t_env *env)
 		env->cfg.forks = NULL;
 	}
 	clean_mutexes(env->mutexes, env->cfg.nb_mutexes);
-//	clean_threads(env);
 }
 
 void	clean_mutexes(t_mtx *mutexes, int count)
@@ -39,5 +38,4 @@ void	clean_mutexes(t_mtx *mutexes, int count)
 		i++;
 	}
 	free(mutexes);
-	mutexes = NULL;
 }

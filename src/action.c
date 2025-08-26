@@ -36,56 +36,31 @@ bool	assign_forks(t_phi *p)
 {
 	while (!check_death(p->cfg))
 	{
-		if (!take_fork(p->f[0]))
-			continue;
-		if (!take_fork(p->f[1]))
+		if (take_fork(p->f[0]) && take_fork(p->f[1]))
 		{
-			drop_fork(p->f[0]);
-			usleep(100);
-			continue;
+			print_output(p, "has taken a fork");
+			print_output(p, "has taken a fork");
+			return (true);
 		}
-		if (check_death(p->cfg))
-		{
-			drop_fork(p->f[0]);
-			drop_fork(p->f[1]);
-			return (false);
-		}
-		print_output(p, "has taken a fork");
-		print_output(p, "has taken a fork");
-		return (true);
+		drop_fork(p->f[0]);
+		usleep(100);
 	}
 	return (false);
 }
 
-bool	action(t_phi *p, t_act action)
+bool	eat(t_phi *p)
 {
-	if (check_death(p->cfg))
+	if (!assign_forks(p))
 		return (false);
-	if (action == THINK)
+	print_output(p, "is eating");
+	if (check_full(p))
 	{
-		print_output(p, "is thinking");
-		if (p->cfg->nb_philos % 2 == 1)
-			usleep(200);
-	}
-	else if (action == EAT)
-	{
-		if (!assign_forks(p))
-			return (false);
-		print_output(p, "is eating");
-		if (check_full(p))
-		{
-			drop_fork(p->f[0]);
-			drop_fork(p->f[1]);
-			return (false);
-		}
-		smart_sleep(p->cfg->time_to_eat, p->cfg);
 		drop_fork(p->f[0]);
 		drop_fork(p->f[1]);
+		return (false);
 	}
-	else if (action == SLEEP)
-	{
-		print_output(p, "is sleeping");
-		smart_sleep(p->cfg->time_to_sleep, p->cfg);
-	}
+	smart_sleep(p->cfg->time_to_eat, p->cfg);
+	drop_fork(p->f[0]);
+	drop_fork(p->f[1]);
 	return (true);
 }
