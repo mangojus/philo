@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:42:06 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 18:55:29 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 14:23:51 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,18 +29,18 @@ long	atol(const char *nptr)
 	sign = 1;
 	res = 0;
 	while ((nptr[i] >= '\t' && nptr[i] <= '\r') || nptr[i] == ' ')
-		i++;
+		++i;
 	if (nptr[i] == '-')
 	{
 		sign = -1;
-		i++;
+		++i;
 	}
 	else if (nptr[i] == '+')
-		i++;
+		++i;
 	while (nptr[i] && is_digit(nptr[i]))
 	{
 		res = res * 10 + (nptr[i] - '0');
-		i++;
+		++i;
 	}
 	return (res * sign);
 }

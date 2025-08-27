@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/26 17:54:07 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 18:40:49 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,19 +21,28 @@ void	*philo_loop(void *arg)
 	p->meal.last = p->cfg->start;
 	pthread_mutex_unlock(p->meal.mtx);
 	sync_time(p->cfg->start);
-	if (p->id % 2 != 0)
-		smart_sleep(p->cfg->time_to_eat / 2, p->cfg);
 	if (p->cfg->status != ERR_OK)
 		return (NULL);
+	print_output(p, "is thinking");
+	if (p->id % 2 != 0)
+		smart_sleep(p->cfg->time_to_eat / 2, p->cfg);
 	while (true)
 	{
-		print_output(p, "is thinking");
-		if (p->cfg->nb_philos % 2 == 1)
-			usleep(200);
 		if (!eat(p))
 			break ;
 		print_output(p, "is sleeping");
 		smart_sleep(p->cfg->time_to_sleep, p->cfg);
+		if (check_death(p->cfg))
+			break ;
+		print_output(p, "is thinking");
+		if (p->cfg->nb_philos % 2 == 1)
+		{
+			usleep(200);
+			if (p->cfg->time_to_sleep < p->cfg->time_to_eat)
+				smart_sleep(p->cfg->time_to_sleep, p->cfg);
+		}
+		if (check_death(p->cfg))
+			break ;
 	}
 	return (NULL);
 }
@@ -64,11 +73,14 @@ static void	*monitor_loop(void *arg)
 				pthread_mutex_unlock(env->cfg.death_mtx);
 				break ;
 			}
-			pthread_mutex_lock(env->philos[i].meal.mtx);
+			pthread_mutex_lock(env->cfg.death_mtx);
 			if (env->cfg.full == env->cfg.nb_philos)
+			{
+				pthread_mutex_unlock(env->cfg.death_mtx);
 				return (NULL);
-			pthread_mutex_unlock(env->philos[i].meal.mtx);
-			i++;
+			}
+			pthread_mutex_unlock(env->cfg.death_mtx);
+			++i;
 		}
 		usleep(100);
 	}
@@ -79,7 +91,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
-	env->cfg.start = get_time() + 1000 + env->cfg.nb_philos;
+	env->cfg.start = get_time() + env->cfg.nb_philos + 1000;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 	{
 		env->cfg.status = ERR_THREAD;
@@ -93,7 +105,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 			env->cfg.status = ERR_THREAD;
 			break ;
 		}
-		i++;
+		++i;
 	}
 	env->cfg.nb_threads = i;
 	while (--i >= 0)

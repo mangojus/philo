@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 15:36:40 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 18:50:50 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 14:22:34 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void	clean_mutexes(t_mtx *mutexes, int count)
 	while (i < count)
 	{
 		pthread_mutex_destroy(&mutexes[i]);
-		i++;
+		++i;
 	}
 	free(mutexes);
 }

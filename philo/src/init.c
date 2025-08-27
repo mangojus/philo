@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 16:32:04 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 18:53:57 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 17:38:24 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ static bool	init_config(t_cfg *cfg, int argc, char **argv)
 		param[i] = atol(argv[i + 1]);
 		if (param[i] > INT_MAX || param[i] < 0)
 			return (false);
-		i++;
+		++i;
 	}
 	cfg->start = -1;
 	cfg->nb_philos = param[0];
@@ -57,7 +57,7 @@ static bool	init_philos(t_env *env)
 		rfork = &env->cfg.forks[(i + 1) % env->cfg.nb_philos];
 		env->philos[i].f[(i + 1) % 2] = lfork;
 		env->philos[i].f[(i + 2) % 2] = rfork;
-		i++;
+		++i;
 	}
 	return (true);
 }
@@ -74,7 +74,7 @@ static bool	init_mutexes(t_env *env)
 			clean_mutexes(env->mutexes, i);
 			return (false);
 		}
-		i++;
+		++i;
 	}
 	env->cfg.death_mtx = &env->mutexes[0];
 	env->cfg.print_mtx = &env->mutexes[1];
@@ -82,8 +82,8 @@ static bool	init_mutexes(t_env *env)
 	while (i < env->cfg.nb_philos)
 	{
 		env->philos[i].meal.mtx = &env->mutexes[2 + i * 2];
-		env->cfg.forks[i].mtx = &env->mutexes[2 + i * 2 + 1];
-		i++;
+		env->cfg.forks[i].mtx = &env->mutexes[2 + (i * 2) + 1];
+		++i;
 	}
 	return (true);
 }

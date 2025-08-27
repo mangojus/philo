@@ -6,7 +6,7 @@
 /*   By: rshin <rshin@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 17:46:50 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/26 17:43:15 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 16:09:15 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,14 +36,23 @@ bool	assign_forks(t_phi *p)
 {
 	while (!check_death(p->cfg))
 	{
-		if (take_fork(p->f[0]) && take_fork(p->f[1]))
+		if (!take_fork(p->f[0]))
+			continue ;
+		if (!take_fork(p->f[1]))
 		{
-			print_output(p, "has taken a fork");
-			print_output(p, "has taken a fork");
-			return (true);
+			drop_fork(p->f[0]);
+			usleep(200);
+			continue ;
 		}
-		drop_fork(p->f[0]);
-		usleep(100);
+		if (check_death(p->cfg))
+		{
+			drop_fork(p->f[0]);
+			drop_fork(p->f[1]);
+			break ;
+		}
+		print_output(p, "has taken a fork");
+		print_output(p, "has taken a fork");
+		return (true);
 	}
 	return (false);
 }

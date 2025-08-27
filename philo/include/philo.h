@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 18:39:56 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 18:03:58 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,29 +58,29 @@ typedef struct s_fork
 
 typedef struct s_philosopher
 {
-	int						id;
-	pthread_t				tid;
-	t_meal					meal;
-	t_fork					*f[2];
-	struct s_config			*cfg;
+	int				id;
+	pthread_t		tid;
+	t_meal			meal;
+	t_fork			*f[2];
+	struct s_config	*cfg;
 }	t_phi;
 
 typedef struct s_config
 {
-	long			start;
-	int				nb_philos;
-	int				time_to_die;
-	int				time_to_eat;
-	int				time_to_sleep;
-	int				max_meals;
-	int				full;
-	int				nb_threads;
-	int				nb_mutexes;
-	t_fork			*forks;
-	t_mtx			*death_mtx;
-	t_mtx			*print_mtx;
-	bool			death_flag;
-	t_err			status;
+	long	start;
+	int		nb_philos;
+	int		time_to_die;
+	int		time_to_eat;
+	int		time_to_sleep;
+	int		max_meals;
+	int		full;
+	int		nb_threads;
+	int		nb_mutexes;
+	t_fork	*forks;
+	t_mtx	*death_mtx;
+	t_mtx	*print_mtx;
+	bool	death_flag;
+	t_err	status;
 }	t_cfg;
 
 typedef struct s_environment

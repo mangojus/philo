@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/20 17:56:38 by rshin            ###   ########.fr       */
+/*   Updated: 2025/08/27 14:23:12 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ static bool	args_checker(int argc, char **argv)
 			if (!is_digit(argv[i][j++]))
 				return (false);
 		}
-		i++;
+		++i;
 	}
 	return (true);
 }
