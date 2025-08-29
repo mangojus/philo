@@ -44,14 +44,9 @@ bool	assign_forks(t_phi *p)
 			usleep(200);
 			continue ;
 		}
-		if (check_death(p->cfg))
-		{
-			drop_fork(p->f[0]);
-			drop_fork(p->f[1]);
-			break ;
-		}
 		print_output(p, "has taken a fork");
 		print_output(p, "has taken a fork");
+		print_output(p, "is eating");
 		return (true);
 	}
 	return (false);
@@ -59,16 +54,16 @@ bool	assign_forks(t_phi *p)
 
 bool	eat(t_phi *p)
 {
+	print_output(p, "stopped here");
 	if (!assign_forks(p))
 		return (false);
-	print_output(p, "is eating");
 	if (check_full(p))
 	{
 		drop_fork(p->f[0]);
 		drop_fork(p->f[1]);
 		return (false);
 	}
-	smart_sleep(p->cfg->time_to_eat, p->cfg);
+	smart_sleep(p->cfg->time_to_eat);
 	drop_fork(p->f[0]);
 	drop_fork(p->f[1]);
 	return (true);

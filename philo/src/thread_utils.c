@@ -12,34 +12,34 @@
 
 #include "philo.h" 
 
-long	get_time(void)
+bool	philos_full(t_cfg *cfg)
 {
-	struct timeval	time;
-
-	gettimeofday(&time, NULL);
-	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
-}
-
-void	smart_sleep(long duration, t_cfg *cfg)
-{
-	long	end_time;
-
-	end_time = get_time() + duration;
-	while (end_time > get_time())
+	pthread_mutex_lock(cfg->full_mtx);
+	if (cfg->full == cfg->nb_philos)
 	{
-		if (check_death(cfg))
-			break ;
-		usleep(100);
+		pthread_mutex_unlock(cfg->full_mtx);
+		return (true);
 	}
+	pthread_mutex_unlock(cfg->full_mtx);
+	return (false);
 }
 
-void	sync_time(long target_t)
+bool	philo_died(t_phi *p)
 {
-	long	rem_t;
+	long	elapsed_t;
 
-	rem_t = target_t - get_time();
-	if (rem_t > 0)
-		usleep(rem_t * 1000);
+	pthread_mutex_lock(p->meal.mtx);
+	elapsed_t = get_time() - p->meal.last;
+	pthread_mutex_unlock(p->meal.mtx);
+	if (elapsed_t > p->cfg->time_to_die)
+	{
+		pthread_mutex_lock(p->cfg->death_mtx);
+		p->cfg->death_flag = true;
+		pthread_mutex_unlock(p->cfg->death_mtx);
+		print_output(p, "died");
+		return (true);
+	}
+	return (false);
 }
 
 bool	check_full(t_phi *p)
@@ -47,11 +47,11 @@ bool	check_full(t_phi *p)
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = get_time();
 	p->meal.count++;
-	if (p->meal.count == p->cfg->max_meals && p->cfg->max_meals != 0)
+	if (p->cfg->max_meals != 0 && p->meal.count == p->cfg->max_meals)
 	{
-		pthread_mutex_lock(p->cfg->death_mtx);
+		pthread_mutex_lock(p->cfg->full_mtx);
 		p->cfg->full++;
-		pthread_mutex_unlock(p->cfg->death_mtx);
+		pthread_mutex_unlock(p->cfg->full_mtx);
 		pthread_mutex_unlock(p->meal.mtx);
 		return (true);
 	}
@@ -69,4 +69,17 @@ bool	check_death(t_cfg *cfg)
 	}
 	pthread_mutex_unlock(cfg->death_mtx);
 	return (false);
+}
+
+bool	thread_barrier(t_cfg *cfg)
+{
+	pthread_mutex_lock(cfg->cfg_mtx);
+	cfg->nb_threads++;
+	if (cfg->status != ERR_OK)
+	{
+		pthread_mutex_unlock(cfg->cfg_mtx);
+		return (false);
+	}
+	pthread_mutex_unlock(cfg->cfg_mtx);
+	return (true);
 }

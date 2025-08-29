@@ -25,7 +25,7 @@ static bool	init_config(t_cfg *cfg, int argc, char **argv)
 			return (false);
 		++i;
 	}
-	cfg->start = -1;
+	cfg->start_t = -1;
 	cfg->nb_philos = param[0];
 	cfg->time_to_die = param[1];
 	cfg->time_to_eat = param[2];
@@ -76,13 +76,15 @@ static bool	init_mutexes(t_env *env)
 		}
 		++i;
 	}
-	env->cfg.death_mtx = &env->mutexes[0];
+	env->cfg.cfg_mtx = &env->mutexes[0];
 	env->cfg.print_mtx = &env->mutexes[1];
+	env->cfg.full_mtx = &env->mutexes[2];
+	env->cfg.death_mtx = &env->mutexes[3];
 	i = 0;
 	while (i < env->cfg.nb_philos)
 	{
-		env->philos[i].meal.mtx = &env->mutexes[2 + i * 2];
-		env->cfg.forks[i].mtx = &env->mutexes[2 + (i * 2) + 1];
+		env->philos[i].meal.mtx = &env->mutexes[4 + i * 2];
+		env->cfg.forks[i].mtx = &env->mutexes[4 + (i * 2) + 1];
 		++i;
 	}
 	return (true);
@@ -98,7 +100,7 @@ t_err	init_env(t_env *env, int argc, char **argv)
 		free(env->cfg.forks);
 		return (ERR_MALLOC);
 	}
-	env->cfg.nb_mutexes = 2 + env->cfg.nb_philos * 2;
+	env->cfg.nb_mutexes = 4 + env->cfg.nb_philos * 2;
 	env->mutexes = malloc(env->cfg.nb_mutexes * sizeof(t_mtx));
 	if (!env->mutexes)
 	{

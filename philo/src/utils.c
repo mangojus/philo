@@ -58,17 +58,15 @@ t_err	print_error(t_err error)
 	return (error);
 }
 
-void	print_output(t_phi *p, char *msg)
+bool	print_output(t_phi *p, char *msg)
 {
-	long	time;
+	long	cur_t;
 
-	pthread_mutex_lock(p->cfg->print_mtx);
 	if (check_death(p->cfg))
-	{
-		pthread_mutex_unlock(p->cfg->print_mtx);
-		return ;
-	}
-	time = get_time() - p->cfg->start;
-	printf("%ld %d %s\n", time, p->id, msg);
+		return (false);
+	pthread_mutex_lock(p->cfg->print_mtx);
+	cur_t = get_time() - p->cfg->start_t;
+	printf("%ld %d %s\n", cur_t, p->id, msg);
 	pthread_mutex_unlock(p->cfg->print_mtx);
+	return (true);
 }

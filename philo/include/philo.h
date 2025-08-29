@@ -67,19 +67,21 @@ typedef struct s_philosopher
 
 typedef struct s_config
 {
-	long	start;
 	int		nb_philos;
 	int		time_to_die;
 	int		time_to_eat;
 	int		time_to_sleep;
 	int		max_meals;
-	int		full;
 	int		nb_threads;
 	int		nb_mutexes;
 	t_fork	*forks;
-	t_mtx	*death_mtx;
+	long	start_t;
+	t_mtx	*cfg_mtx;
 	t_mtx	*print_mtx;
+	int		full;
+	t_mtx	*full_mtx;
 	bool	death_flag;
+	t_mtx	*death_mtx;
 	t_err	status;
 }	t_cfg;
 
@@ -97,7 +99,11 @@ void	cleanup(t_env *env);
 void	clean_mutexes(t_mtx *mutexes, int count);
 
 long	get_time(void);
-void	smart_sleep(long duration, t_cfg *cfg);
+void	smart_sleep(long duration);
+
+bool	philos_full(t_cfg *cfg);
+
+bool	philo_died(t_phi *p);
 
 int		is_digit(int c);
 long	atol(const char *nptr);
@@ -107,10 +113,12 @@ void	drop_fork(t_fork *fork);
 bool	assign_forks(t_phi *p);
 bool	eat(t_phi *p);
 
+bool	thread_barrier(t_cfg *cfg);
+
 void	sync_time(long target_t);
 bool	check_death(t_cfg *cfg);
 bool	check_full(t_phi *p);
-void	print_output(t_phi *p, char *msg);
+bool	print_output(t_phi *p, char *msg);
 t_err	print_error(t_err error);
 
 #endif
