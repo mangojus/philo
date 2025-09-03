@@ -18,15 +18,11 @@ void	*philo_loop(void *arg)
 	long 	think_t;
 
 	p = (t_phi *)arg;
-//	if (!thread_barrier(p->cfg))
-//		return (NULL);
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = p->cfg->start_t;
 	pthread_mutex_unlock(p->meal.mtx);
 	sync_time(p->cfg->start_t);
 	if (check_full(p))
-		return (NULL);
-	if (check_death(p->cfg))
 		return (NULL);
 	print_output(p, "is thinking");
 	if (p->id % 2 != 0)
@@ -45,8 +41,6 @@ void	*philo_loop(void *arg)
 			think_t = (p->cfg->eat_t * 2) - p->cfg->sleep_t;
 			if (think_t > 0)
 				smart_sleep(think_t / 2);
-			else
-				usleep(1000);
 		}
 	}
 	return (NULL);
@@ -58,8 +52,6 @@ static void	*monitor_loop(void *arg)
 	int		i;
 
 	env = (t_env *)arg;
-//	if (!thread_barrier(&env->cfg))
-//		return (NULL);
 	sync_time(env->cfg.start_t);
 	while (true)
 	{
@@ -72,7 +64,7 @@ static void	*monitor_loop(void *arg)
 				return (NULL);
 			++i;
 		}
-		usleep(500);
+		usleep(100);
 	}
 	return (NULL);
 }

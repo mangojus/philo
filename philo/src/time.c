@@ -12,6 +12,7 @@ void	smart_sleep(long duration)
 {
 	long	end_t;
 	long	cur_t;
+//	long	rem_t;
 
 	end_t = get_time() + duration;
 	while (true)
@@ -23,14 +24,38 @@ void	smart_sleep(long duration)
 			usleep(1000);
 		else
 			usleep(100);
-	}
+	}/*
+	while (true)
+	{
+		rem_t = end_t - get_time();
+		if (rem_t > 5)
+			usleep(rem_t * 900);
+		else
+		{
+			while (get_time() < end_t)
+				;
+			break ;
+		}
+	}*/
 }
 
 void	sync_time(long target_t)
 {
 	long	rem_t;
 
+	while ((rem_t = target_t - get_time()) > 0)
+	{
+		if (rem_t > 5)
+			usleep(rem_t * 900);
+		else
+		{
+			while (get_time() < target_t)
+				;
+			break;
+		}
+	}
+/*
 	rem_t = target_t - get_time();
 	if (rem_t > 0)
-		usleep(rem_t * 1000);
+		smart_sleep(rem_t);*/
 }

@@ -73,7 +73,7 @@ bool	check_death(t_cfg *cfg)
 	pthread_mutex_unlock(cfg->death_mtx);
 	return (false);
 }
-
+/*
 bool	thread_barrier(t_cfg *cfg)
 {
 	pthread_mutex_lock(cfg->cfg_mtx);
@@ -91,4 +91,4 @@ bool	thread_barrier(t_cfg *cfg)
 	}
 	pthread_mutex_unlock(cfg->cfg_mtx);
 	return (true);
-}
+}*/

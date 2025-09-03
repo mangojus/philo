@@ -40,21 +40,21 @@ void	drop_forks(t_phi *p)
 
 bool	assign_forks(t_phi *p)
 {
-/*	while (!check_death(p->cfg))
+	while (!check_death(p->cfg))
 	{
 		if (!take_fork(p->f[0]))
 			continue ;
 		if (!take_fork(p->f[1]))
 		{
 			drop_fork(p->f[0]);
-			usleep(100);
+//			usleep(100);
 			continue ;
 		}
 		print_output(p, "has taken a fork");
 		print_output(p, "has taken a fork");
 		return (true);
 	}
-	return (false);*/
+	return (false);/*
 	while (!check_death(p->cfg))
 	{
 		if (take_fork(p->f[0]))
@@ -70,7 +70,7 @@ bool	assign_forks(t_phi *p)
 		}
 	}
 	drop_forks(p);
-	return (false);
+	return (false);*/
 }
 
 bool	eat(t_phi *p)
@@ -86,11 +86,8 @@ bool	eat(t_phi *p)
 		return (false);	
 	}
 	smart_sleep(p->cfg->eat_t);
-	if (check_full(p))
-	{
-		drop_forks(p);
-		return (false);
-	}
 	drop_forks(p);
+	if (check_full(p))
+		return (false);
 	return (true);
 }
