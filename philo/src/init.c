@@ -14,10 +14,11 @@
 
 static bool	init_config(t_cfg *cfg, int argc, char **argv)
 {
-	static long	param[5];
+	long	param[5];
 	int			i;
 
 	i = 0;
+	memset(param, -1, sizeof(long) * 5);
 	while (i <= argc - 2)
 	{
 		param[i] = atol(argv[i + 1]);
@@ -27,9 +28,9 @@ static bool	init_config(t_cfg *cfg, int argc, char **argv)
 	}
 	cfg->start_t = -1;
 	cfg->nb_philos = param[0];
-	cfg->time_to_die = param[1];
-	cfg->time_to_eat = param[2];
-	cfg->time_to_sleep = param[3];
+	cfg->die_t = param[1];
+	cfg->eat_t = param[2];
+	cfg->sleep_t = param[3];
 	cfg->max_meals = param[4];
 	cfg->forks = malloc(cfg->nb_philos * sizeof(t_fork));
 	if (!cfg->forks)

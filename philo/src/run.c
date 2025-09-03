@@ -15,30 +15,38 @@
 void	*philo_loop(void *arg)
 {
 	t_phi	*p;
+	long 	think_t;
 
 	p = (t_phi *)arg;
-	if (!thread_barrier(p->cfg))
-		return (NULL);
+//	if (!thread_barrier(p->cfg))
+//		return (NULL);
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = p->cfg->start_t;
 	pthread_mutex_unlock(p->meal.mtx);
+	sync_time(p->cfg->start_t);
+	if (check_full(p))
+		return (NULL);
+	if (check_death(p->cfg))
+		return (NULL);
 	print_output(p, "is thinking");
 	if (p->id % 2 != 0)
-		smart_sleep(p->cfg->time_to_eat);
+		smart_sleep(p->cfg->eat_t / 2);
 	while (!check_death(p->cfg))
 	{
 		if (!eat(p))
 			break ;
 		if (!print_output(p, "is sleeping"))
 			break;
-		smart_sleep(p->cfg->time_to_sleep);
+		smart_sleep(p->cfg->sleep_t);
 		if (!print_output(p, "is thinking"))
 			break ;
 		if (p->cfg->nb_philos % 2 == 1)
 		{
-			usleep(200);
-			if (p->cfg->time_to_sleep < p->cfg->time_to_eat)
-				smart_sleep(p->cfg->time_to_sleep);
+			think_t = (p->cfg->eat_t * 2) - p->cfg->sleep_t;
+			if (think_t > 0)
+				smart_sleep(think_t / 2);
+			else
+				usleep(1000);
 		}
 	}
 	return (NULL);
@@ -50,8 +58,9 @@ static void	*monitor_loop(void *arg)
 	int		i;
 
 	env = (t_env *)arg;
-	if (!thread_barrier(&env->cfg))
-		return (NULL);
+//	if (!thread_barrier(&env->cfg))
+//		return (NULL);
+	sync_time(env->cfg.start_t);
 	while (true)
 	{
 		if (philos_full(&env->cfg))
@@ -72,6 +81,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 {
 	int		i;
 
+	env->cfg.start_t = get_time() + env->cfg.nb_philos + 1000;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 	{
 		env->cfg.status = ERR_THREAD;
@@ -87,7 +97,6 @@ bool	run_simulation(t_env *env, t_phi *philos)
 		}
 		++i;
 	}
-	env->cfg.start_t = get_time();
 	while (--i >= 0)
 		pthread_join(philos[i].tid, NULL);
 	pthread_join(env->monitor, NULL);

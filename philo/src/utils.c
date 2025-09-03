@@ -62,10 +62,13 @@ bool	print_output(t_phi *p, char *msg)
 {
 	long	cur_t;
 
-	if (check_death(p->cfg))
-		return (false);
 	pthread_mutex_lock(p->cfg->print_mtx);
 	cur_t = get_time() - p->cfg->start_t;
+	if (check_death(p->cfg))
+	{
+		pthread_mutex_unlock(p->cfg->print_mtx);
+		return (false);
+	}
 	printf("%ld %d %s\n", cur_t, p->id, msg);
 	pthread_mutex_unlock(p->cfg->print_mtx);
 	return (true);

@@ -15,7 +15,7 @@
 bool	philos_full(t_cfg *cfg)
 {
 	pthread_mutex_lock(cfg->full_mtx);
-	if (cfg->full == cfg->nb_philos)
+	if (cfg->full >= cfg->nb_philos)
 	{
 		pthread_mutex_unlock(cfg->full_mtx);
 		return (true);
@@ -27,16 +27,20 @@ bool	philos_full(t_cfg *cfg)
 bool	philo_died(t_phi *p)
 {
 	long	elapsed_t;
+	long	cur_t;
 
 	pthread_mutex_lock(p->meal.mtx);
 	elapsed_t = get_time() - p->meal.last;
 	pthread_mutex_unlock(p->meal.mtx);
-	if (elapsed_t > p->cfg->time_to_die)
+	if (elapsed_t > p->cfg->die_t && p->meal.last != -1)
 	{
 		pthread_mutex_lock(p->cfg->death_mtx);
 		p->cfg->death_flag = true;
 		pthread_mutex_unlock(p->cfg->death_mtx);
-		print_output(p, "died");
+		pthread_mutex_lock(p->cfg->print_mtx);
+		cur_t = get_time() - p->cfg->start_t;
+		printf("%ld %d died\n", cur_t, p->id);
+		pthread_mutex_unlock(p->cfg->print_mtx);
 		return (true);
 	}
 	return (false);
@@ -45,14 +49,13 @@ bool	philo_died(t_phi *p)
 bool	check_full(t_phi *p)
 {
 	pthread_mutex_lock(p->meal.mtx);
-	p->meal.last = get_time();
 	p->meal.count++;
-	if (p->cfg->max_meals != 0 && p->meal.count == p->cfg->max_meals)
+	if (p->cfg->max_meals != -1 && p->meal.count >= p->cfg->max_meals)
 	{
+		pthread_mutex_unlock(p->meal.mtx);
 		pthread_mutex_lock(p->cfg->full_mtx);
 		p->cfg->full++;
 		pthread_mutex_unlock(p->cfg->full_mtx);
-		pthread_mutex_unlock(p->meal.mtx);
 		return (true);
 	}
 	pthread_mutex_unlock(p->meal.mtx);
@@ -75,6 +78,12 @@ bool	thread_barrier(t_cfg *cfg)
 {
 	pthread_mutex_lock(cfg->cfg_mtx);
 	cfg->nb_threads++;
+	while (cfg->start_t == -1)
+	{
+		pthread_mutex_unlock(cfg->cfg_mtx);
+		usleep(100);
+		pthread_mutex_lock(cfg->cfg_mtx);		
+	}
 	if (cfg->status != ERR_OK)
 	{
 		pthread_mutex_unlock(cfg->cfg_mtx);

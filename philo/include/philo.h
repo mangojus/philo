@@ -68,9 +68,9 @@ typedef struct s_philosopher
 typedef struct s_config
 {
 	int		nb_philos;
-	int		time_to_die;
-	int		time_to_eat;
-	int		time_to_sleep;
+	int		die_t;
+	int		eat_t;
+	int		sleep_t;
 	int		max_meals;
 	int		nb_threads;
 	int		nb_mutexes;
