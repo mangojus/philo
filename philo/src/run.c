@@ -12,27 +12,34 @@
 
 #include "philo.h" 
 
-void	*philo_loop(void *arg)
+static bool	set_start(t_phi *p)
 {
-	t_phi	*p;
-	long 	think_t;
-
-	p = (t_phi *)arg;
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = p->cfg->start_t;
 	pthread_mutex_unlock(p->meal.mtx);
 	sync_time(p->cfg->start_t);
-	if (check_full(p))
-		return (NULL);
+	if (p->cfg->status != ERR_OK)
+		return (false);
 	print_output(p, "is thinking");
-	if (p->id % 2 != 0)
+	if (p->id % 2 == 1)
 		smart_sleep(p->cfg->eat_t / 2);
+	return (true);
+}
+
+static void	*philo_loop(void *arg)
+{
+	t_phi	*p;
+	long	think_t;
+
+	p = (t_phi *)arg;
+	if (!set_start(p))
+		return (NULL);
 	while (!check_death(p->cfg))
 	{
 		if (!eat(p))
 			break ;
 		if (!print_output(p, "is sleeping"))
-			break;
+			break ;
 		smart_sleep(p->cfg->sleep_t);
 		if (!print_output(p, "is thinking"))
 			break ;
@@ -53,6 +60,8 @@ static void	*monitor_loop(void *arg)
 
 	env = (t_env *)arg;
 	sync_time(env->cfg.start_t);
+	if (env->cfg.status != ERR_OK)
+		return (NULL);
 	while (true)
 	{
 		if (philos_full(&env->cfg))

@@ -15,7 +15,7 @@
 static bool	init_config(t_cfg *cfg, int argc, char **argv)
 {
 	long	param[5];
-	int			i;
+	int		i;
 
 	i = 0;
 	memset(param, -1, sizeof(long) * 5);
@@ -115,5 +115,5 @@ t_err	init_env(t_env *env, int argc, char **argv)
 		free(env->cfg.forks);
 		return (ERR_MUTEX);
 	}
- 	return (ERR_OK);
+	return (ERR_OK);
 }

@@ -108,9 +108,6 @@ bool	philo_died(t_phi *p);
 int		is_digit(int c);
 long	atol(const char *nptr);
 
-bool	take_fork(t_fork *fork);
-void	drop_fork(t_fork *fork);
-bool	assign_forks(t_phi *p);
 bool	eat(t_phi *p);
 
 bool	thread_barrier(t_cfg *cfg);

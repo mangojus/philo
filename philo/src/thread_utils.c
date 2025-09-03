@@ -73,22 +73,3 @@ bool	check_death(t_cfg *cfg)
 	pthread_mutex_unlock(cfg->death_mtx);
 	return (false);
 }
-/*
-bool	thread_barrier(t_cfg *cfg)
-{
-	pthread_mutex_lock(cfg->cfg_mtx);
-	cfg->nb_threads++;
-	while (cfg->start_t == -1)
-	{
-		pthread_mutex_unlock(cfg->cfg_mtx);
-		usleep(100);
-		pthread_mutex_lock(cfg->cfg_mtx);		
-	}
-	if (cfg->status != ERR_OK)
-	{
-		pthread_mutex_unlock(cfg->cfg_mtx);
-		return (false);
-	}
-	pthread_mutex_unlock(cfg->cfg_mtx);
-	return (true);
-}*/
