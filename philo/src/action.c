@@ -6,7 +6,7 @@
 /*   By: rshin <rshin@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/20 17:46:50 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/27 16:09:15 by rshin            ###   ########.fr       */
+/*   Updated: 2025/09/04 08:57:52 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ bool	eat(t_phi *p)
 		return (false);
 	pthread_mutex_lock(p->meal.mtx);
 	p->meal.last = get_time();
+	p->meal.count++;
 	pthread_mutex_unlock(p->meal.mtx);
 	if (!print_output(p, "is eating"))
 	{

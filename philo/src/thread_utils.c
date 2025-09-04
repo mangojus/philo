@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/27 18:41:21 by rshin            ###   ########.fr       */
+/*   Updated: 2025/09/04 09:04:32 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,6 @@ bool	philo_died(t_phi *p)
 bool	check_full(t_phi *p)
 {
 	pthread_mutex_lock(p->meal.mtx);
-	p->meal.count++;
 	if (p->cfg->max_meals != -1 && p->meal.count >= p->cfg->max_meals)
 	{
 		pthread_mutex_unlock(p->meal.mtx);
