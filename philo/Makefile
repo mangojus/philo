@@ -6,7 +6,7 @@
 #    By: rshin <marvin@42.fr>                       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/21 09:17:03 by rshin             #+#    #+#              #
-#    Updated: 2025/09/04 09:14:23 by rshin            ###   ########.fr        #
+#    Updated: 2025/09/04 09:45:53 by rshin            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME = philo
 
 CC = cc
 
-CFLAGS = -Wall -Werror -Wextra -g3# -fsanitize=thread
+CFLAGS = -Wall -Werror -Wextra
 
 IFLAGS = -I $(INC_D) -MMD -MP
 

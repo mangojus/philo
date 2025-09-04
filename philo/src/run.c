@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/09/04 08:53:29 by rshin            ###   ########.fr       */
+/*   Updated: 2025/09/04 09:58:40 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,13 @@ static bool	set_start(t_phi *p)
 	p->meal.last = p->cfg->start_t;
 	pthread_mutex_unlock(p->meal.mtx);
 	sync_time(p->cfg->start_t);
+	pthread_mutex_lock(p->cfg->cfg_mtx);
 	if (p->cfg->status != ERR_OK)
+	{
+		pthread_mutex_unlock(p->cfg->cfg_mtx);
 		return (false);
+	}
+	pthread_mutex_unlock(p->cfg->cfg_mtx);
 	print_output(p, "is thinking");
 	if (p->id % 2 == 1)
 		smart_sleep(p->cfg->eat_t / 2);
@@ -85,7 +90,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 	env->cfg.start_t = get_time() + env->cfg.nb_philos + 1000;
 	if (pthread_create(&env->monitor, NULL, &monitor_loop, env))
 	{
-		env->cfg.status = ERR_THREAD;
+		set_err(&env->cfg);
 		return (false);
 	}
 	i = 0;
@@ -93,7 +98,7 @@ bool	run_simulation(t_env *env, t_phi *philos)
 	{
 		if (pthread_create((&philos[i].tid), NULL, &philo_loop, &philos[i]))
 		{
-			env->cfg.status = ERR_THREAD;
+			set_err(&env->cfg);
 			break ;
 		}
 		++i;

@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:39:46 by rshin             #+#    #+#             */
-/*   Updated: 2025/09/04 09:04:32 by rshin            ###   ########.fr       */
+/*   Updated: 2025/09/04 09:52:11 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,4 +71,11 @@ bool	check_death(t_cfg *cfg)
 	}
 	pthread_mutex_unlock(cfg->death_mtx);
 	return (false);
+}
+
+void	set_err(t_cfg *cfg)
+{
+	pthread_mutex_lock(cfg->cfg_mtx);
+	cfg->status = ERR_THREAD;
+	pthread_mutex_unlock(cfg->cfg_mtx);
 }

@@ -6,7 +6,7 @@
 /*   By: rshin <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 09:38:59 by rshin             #+#    #+#             */
-/*   Updated: 2025/08/27 18:03:58 by rshin            ###   ########.fr       */
+/*   Updated: 2025/09/04 09:54:53 by rshin            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,6 +112,7 @@ bool	eat(t_phi *p);
 
 bool	thread_barrier(t_cfg *cfg);
 
+void	set_err(t_cfg *cfg);
 void	sync_time(long target_t);
 bool	check_death(t_cfg *cfg);
 bool	check_full(t_phi *p);
